@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(
-    name="Symbolics", # Replace with your own username
+    name="SymPDE", # Replace with your own username
     version="0.1",
     author="Katharine Long",
     author_email="katharine.long@ttu.edu",

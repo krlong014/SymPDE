@@ -1,7 +1,7 @@
 import pytest
 import numpy as np
-from Expr import (Expr, ConstantScalarExpr, ConstantVectorExpr)
-from CoordinateExpr import Coordinate
+from Expr import (Expr, ConstantScalarExpr, ConstantVectorExpr,
+    Coordinate)
 from SimpleEvaluator import compareEval, evalExpr
 
 
