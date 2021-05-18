@@ -12,6 +12,9 @@ class ExprShape:
     def additionCompatible(left, right):
         '''Determine whether two operands are additively compatible'''
 
+        if isinstance(left, ListShape) or isinstance(right, ListShape):
+            return False
+
         # Make sure both inputs are subtypes of ExprShape
         if not isinstance(left, ExprShape):
             raise TypeError(
@@ -27,6 +30,9 @@ class ExprShape:
 
     def multiplicationCompatible(left, right):
         '''Determine whether two operands are multiplicatively compatible'''
+
+        if isinstance(left, ListShape) or isinstance(right, ListShape):
+            return False
 
         # Make sure both inputs are subtypes of ExprShape
         if not isinstance(left, ExprShape):
@@ -104,6 +110,19 @@ class ExprShape:
 
     def __ne__(self, other):
         return not (self==other)
+
+
+class ListShape(ExprShape):
+    def __init__(self):
+        super().__init__(-1)
+
+    def __eq__(self, other):
+        return isinstance(other, ListShape)
+
+    def __str__(self):
+        return "List"
+
+
 
 
 class ScalarShape(ExprShape):

@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
-from ExprShape import ExprShape, ScalarShape, TensorShape, VectorShape
+from ExprShape import (ExprShape, ScalarShape, TensorShape,
+    VectorShape, ListShape)
 from numbers import Number
 from numpy.linalg import norm
-from numpy import dot, array_equiv, inf
+from numpy import dot, array_equiv, inf, ndarray
 import copy
 
 class Expr(ABC):
@@ -19,13 +20,17 @@ class Expr(ABC):
     def shape(self):
         return self._shape
 
+    def __len__(self):
+        return self.shape().dim
+
     def sameas(self, other):
         return (type(self)==type(other)
             and self.shape().sameas(other.shape())
             and self._sameas(other))
 
+    @abstractmethod
     def _sameas(self, other):
-        return False
+        pass
 
     def isConstant(self):
         return False
@@ -42,6 +47,8 @@ class Expr(ABC):
             rtn = copy.deepcopy(self)
             rtn._data = -rtn._data
             return rtn
+        if isinstance(self, ListExpr):
+            raise ValueError('cannot negate a ListExpr')
         return UnaryMinus(self)
 
     def __add__(self, other):
@@ -148,12 +155,24 @@ class Expr(ABC):
         left = Expr._convertToExpr(leftIn)
         right = Expr._convertToExpr(rightIn)
 
+
+        # Division by a list is an error
+        if isinstance(right, ListExpr):
+            raise ValueError(
+                'Division by list is undefined: num={}, den={}'.format(left,right))
+
+        # Division of a list is an error
+        if isinstance(left, ListExpr):
+            raise ValueError(
+                'Dividing a list is undefined: num={}, den={}'.format(left,right))
+
         # Division by a vector or tensor is an error
         if Expr._getShape(right) != ScalarShape():
             raise ValueError(
                 'Division of [{}] by non-scalar [{}] is undefined.'
                     .format(left.__repr__(), right.__repr__())
                 )
+
 
         # Division by zero is an error
         if Expr._isZero(right):
@@ -240,13 +259,13 @@ class Expr(ABC):
             return False
         if isinstance(x, ConstantScalarExpr):
             return x.data()==1.0
-        if isinstance(x, ConstantTensorExpr):
-            d = x.data()
-            for i in range(x.shape().dim):
-                for j in range(x.shape().dim):
-                    if ((i!=j and d[i,j] != 0.0) or (i==j and d[i,j] != 1.0)):
-                        return False
-            return True
+        # if isinstance(x, ConstantTensorExpr):
+        #     d = x.data()
+        #     for i in range(x.shape().dim):
+        #         for j in range(x.shape().dim):
+        #             if ((i!=j and d[i,j] != 0.0) or (i==j and d[i,j] != 1.0)):
+        #                 return False
+        #     return True
         return False
 
 
@@ -268,8 +287,13 @@ class Expr(ABC):
         if isinstance(x, Number):
             return ConstantScalarExpr(x)
 
+        if isinstance(x, ndarray):
+            return ConstantVectorExpr(x)
+
         raise ValueError('input [{}] cannot be converted to Expr'.format(x))
 
+    def _convertibleToExpr(x):
+        return isinstance(x, (Expr, Number, ndarray))
 
 
 
@@ -286,6 +310,11 @@ class UnaryExpr(Expr):
     def __init__(self, arg, shape):
         super().__init__(shape)
         self.arg = arg
+
+
+    def _sameas(self, other):
+        return self.arg.sameas(other.arg)
+
 
 
 class UnaryMinus(UnaryExpr):
@@ -305,6 +334,8 @@ class UnaryMinus(UnaryExpr):
 class BinaryExpr(Expr):
     def __init__(self, L, R, shape):
         super().__init__(shape)
+        assert(not isinstance(L, ListExpr) and not isinstance(R, ListExpr))
+
         self.L = L
         self.R = R
 
@@ -329,8 +360,8 @@ class SumExpr(BinaryExpr):
             raise ValueError('SumExpr: Nonsense sign argument {}'.format(sign))
 
     def _sameas(self, other):
-        return (self.L.sameas(other.L)
-            and self.R.sameas(other.R) and self.sign==other.sign)
+        return (self.L.sameas(other.L) and self.R.sameas(other.R)
+            and self.sign==other.sign)
 
     def __str__(self):
         return super().toString(self.op)
@@ -402,7 +433,7 @@ class ConstantExprBase(Expr, ABC):
         pass
 
     def __str__(self):
-        return '%g' % self._data
+        return '{}'.format(self._data)
 
 
     def __repr__(self):
@@ -416,7 +447,7 @@ class ConstantExprBase(Expr, ABC):
         return array_equiv(self._data, other._data)
 
     def _isZero(self):
-        return npla.norm(self._data, ord=np.inf)==0.0
+        return norm(self._data, ord=inf)==0.0
 
 
 
@@ -442,7 +473,7 @@ class ConstantScalarExpr(ConstantExprBase):
         return self.data()==0.0
 
 
-class VectorInterface(ABC):
+class VectorExprInterface(ABC):
 
     @abstractmethod
     def __getitem__(self, i):
@@ -450,49 +481,36 @@ class VectorInterface(ABC):
 
 
 
+class VectorExprIterator:
+    '''Iterator for elements of vectors'''
+    def __init__(self, parent):
+        '''Constructor'''
+        self._index = 0
+        assert(isinstance(parent, VectorExprInterface))
+        self._parent = parent
 
-def Vector(x):
-    '''Create a Vector expression.'''
-    # if the input is a numpy array, put it into a ConstantVectorExpr
-    if isinstance(x, np.ndarray):
-        order = len(x.shape())
-        assert(order==1)
-        return ConstantVector(x)
-
-    # if the input is a 1D list or tuple:
-    #   (*) Form a ConstantVectorExpr if all the elements are constants
-    #   (*) Form a VectorExpr otherwise
-    if isinstance(x, (list, tuple)):
-        allConsts = True
-        elems = []
-        for x_i in x:
-            if len(x_i)!=1:
-                raise ValueError('Vector() input not 1D: [{}]'.format(x))
-            if isinstance(x_i, Number):
-                elems.append(x_i)
-            elif isinstance(x_i, Expr):
-                if x_i.shape()() != ScalarShape():
-                    raise ValueError('Vector() element not scalar: [{}]'.format(x))
-                if not x_i.isConstant():
-                    allConsts = False
-                    elems.append(x_i)
-                else:
-                    elems.append(x_i.data())
-            else:
-                raise ValueError('Vector() input neither number nor expr: [{}]'.format(x_i))
-
-        if allConsts:
-            return ConstantVectorExpr(np.array(elems))
+    def __next__(self):
+        '''Advance the iterator'''
+        if self._index>=0 and self._index < len(self._parent):
+            result = self._parent._elems[self._index]
+            self._index += 1
+            return result
         else:
-            exprElems = []
-            for e in elems:
-                exprElems.append(Expr._convertToExpr(e))
-            return VectorExpr(e)
+            raise StopIteration
 
-class ConstantVectorExpr(ConstantExprBase, VectorInterface):
+
+class VectorElementInterface:
+
+    def __init__(self, parent, myIndex):
+        self.parent = parent
+        self.myIndex = myIndex
+
+
+class ConstantVectorExpr(ConstantExprBase, VectorExprInterface):
     def __init__(self, data):
         shape = VectorShape(len(data))
-        super(ConstantExprBase).__init__(data, shape)
+        super().__init__(data, shape)
+
 
     def typename(self):
         return "ConstantVector"
@@ -505,10 +523,25 @@ class ConstantVectorExpr(ConstantExprBase, VectorInterface):
         if isinstance(resultShape, ScalarShape):
             return ConstantScalarExpr(self.data() * other.data())
         if isinstance(resultShape, VectorShape):
-            return ConstantVectorExpr(np.dot(self.data(), other.data()))
+            return ConstantVectorExpr(dot(self.data(), other.data()))
 
     def __getitem__(self, i):
+        assert(i>=0 and i<self.shape().dim)
         return self.data()[i]
+
+    def __len__(self):
+        return self.shape().dim
+
+
+
+
+
+#############################################################################
+#
+# Class for coordinate functions (e.g., x, y, z)
+#
+#############################################################################
+
 
 class Coordinate(Expr):
 
@@ -529,3 +562,95 @@ class Coordinate(Expr):
 
     def _sameas(self, other):
         return self.dir==other.dir and self.name==other.name
+
+
+#############################################################################
+#
+# Class for listing expressions
+#
+#############################################################################
+
+class ListExpr(Expr):
+
+    def __init__(self, *args):
+        super().__init__(ListShape())
+
+        if len(args)==1:
+            input = args[0]
+        else:
+            input = args
+
+
+        if not isinstance(input, (list, tuple, Expr, Number, ndarray)):
+            raise ValueError('input [{}] not convertible to ListExpr'.format(input))
+
+        if isinstance(input, ListExpr):
+            self.data = input.data
+        elif isinstance(input, (list, tuple)):
+            self.data = []
+            for i,e in enumerate(input):
+                if isinstance(e, ListExpr):
+                    raise ValueError('List within list detected in entry \
+                    #{}=[]'.format(i, e))
+                if not Expr._convertibleToExpr(e):
+                    raise ValueError('List entry #{}=[] not convertible \
+                    to Expr'.format(i,e))
+                self.data.append(Expr._convertToExpr(e))
+        else:
+            self.data = [Expr._convertToExpr(input),]
+
+    def _sameas(self, other):
+        if len(self)!=len(other):
+            return False
+
+        for (me, you) in zip(self, other):
+            if not me.sameas(you):
+                return False
+        return True
+
+
+
+    def __getitem__(self, i):
+        if i<0 or i>=(len(self)):
+            raise(IndexError('Index {} out of range [0,{}]'.format(i, len(self)-1)))
+        return self.data[i]
+
+    def __len__(self):
+        return len(self.data)
+
+    def __contains__(self, x):
+        return x in self.data
+
+    def __iter__(self):
+        return ListExprIterator(self)
+
+    def __str__(self):
+        rtn = 'List('
+        for i,e in enumerate(self.data):
+            if i>0:
+                rtn += ', '
+            rtn += e.__str__()
+        rtn += ')'
+        return rtn
+
+    def append(self, entry):
+        self.data.append(entry)
+
+
+
+class ListExprIterator:
+    '''Iterator for expressions stored in containers'''
+    def __init__(self, parent):
+        '''Constructor'''
+        self._index = 0
+        assert(isinstance(parent, ListExpr))
+        self._parent = parent
+
+    def __next__(self):
+        '''Advance the iterator'''
+        if self._index>=0 and self._index < len(self._parent):
+            result = self._parent.data[self._index]
+            self._index += 1
+            return result
+        else:
+            raise StopIteration
