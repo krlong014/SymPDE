@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 from Expr import (Expr, ConstantScalarExpr, ConstantVectorExpr,
     Coordinate)
+from ElemFunc import Exp, Sqrt
 from SimpleEvaluator import compareEval, evalExpr
 
 
@@ -331,9 +332,19 @@ class TestArithmetic:
             '(1+x*y)**(y*2-1)')
         assert(ex==raw)
 
+    def test_ElemFunc1(self):
+        (ex,raw) = compareEval(('x','y'), (1.5,5.4),
+            'Exp(x)*Sqrt(x)')
+        assert(ex==raw)
+
+    def test_ArcTan2(self):
+        (ex,raw) = compareEval(('x','y'), (1.5,5.4),
+            'ArcTan2(y,x)')
+        assert(ex==raw)
 
 
-class TestComplicated:
+
+class xTestComplicated:
 
     def test_Complicated1(self):
         (ex,raw) = compareEval(('x','y'), (1.5,5.4),
@@ -351,7 +362,7 @@ class TestComplicated:
 
 
 
-class TestExpectedErrors:
+class xTestExpectedErrors:
 
     def test_ZeroDiv1(self):
         with pytest.raises(ZeroDivisionError) as err_info:

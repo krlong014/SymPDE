@@ -145,8 +145,12 @@ class Expr(ABC):
         if left.isConstant() and right.isConstant():
             return left.timesConstant(right)
 
-        # Default case: expr times expr
-        return ProductExpr(left, right)
+        # Expr times expr
+        if (isinstance(left.shape(), ScalarShape)
+                or isinstance(right.shape(), ScalarShape)):
+            return ProductExpr(left, right)
+
+        return DotProductExpr(left, right)
 
 
     def _divide(leftIn, rightIn):
@@ -187,7 +191,6 @@ class Expr(ABC):
         # Check for constant divided by constant
         if left.isConstant() and right.isConstant():
             rtn = copy.deepcopy(left)
-            print('left=', rtn.__repr__())
             rtn._data = rtn._data/right._data
             return rtn
 
@@ -305,15 +308,51 @@ class Expr(ABC):
 #
 #############################################################################
 
+class ExprWithChildren(Expr):
+    def __init__(self, children, shape):
 
-class UnaryExpr(Expr):
-    def __init__(self, arg, shape):
+        if not (isinstance(children, (list, tuple)) and len(children)>0):
+            raise ValueError('ExprWithChildren bad input {}'.format(children))
+        for c in children:
+            assert(not isinstance(c, ListExpr))
+
         super().__init__(shape)
-        self.arg = arg
 
+        self._children = children
+
+    def children(self):
+        return self._children
+
+    def child(self, i):
+        return self._children[i]
 
     def _sameas(self, other):
-        return self.arg.sameas(other.arg)
+        for me, you in zip(self._children, other._children):
+            if not me._sameas(you):
+                return False
+        return True
+
+    def isSpatialConstant(self):
+        for c in self._children:
+            if not c.isSpatialConstant():
+                return False
+        return True
+
+    def isConstant(self):
+        for c in self._children:
+            if not c.isConstant():
+                return False
+        return True
+
+class UnaryExpr(ExprWithChildren):
+    def __init__(self, arg, shape):
+        super().__init__((arg,),shape)
+
+    def arg(self):
+        return self.child(0)
+
+    def _sameas(self, other):
+        return self.arg().sameas(other.arg())
 
 
 
@@ -321,32 +360,29 @@ class UnaryMinus(UnaryExpr):
     def __init__(self, arg):
         super().__init__(arg, Expr._getShape(arg))
 
-    def _sameas(self, other):
-        return self.arg.sameas(other.arg)
-
     def __str__(self):
-        return '-%s' % Expr._maybeParenthesize(self.arg)
+        return '-%s' % Expr._maybeParenthesize(self.arg())
 
     def __repr__(self):
-        return 'UnaryMinus[arg={}]'.format(self.arg.__repr__())
+        return 'UnaryMinus[arg={}]'.format(self.arg().__repr__())
 
 
-class BinaryExpr(Expr):
+class BinaryExpr(ExprWithChildren):
     def __init__(self, L, R, shape):
-        super().__init__(shape)
-        assert(not isinstance(L, ListExpr) and not isinstance(R, ListExpr))
+        super().__init__((L, R), shape)
 
-        self.L = L
-        self.R = R
+    def left(self):
+        return self.child(0)
 
-    def _sameas(self, other):
-        return (self.L.sameas(other.L) and self.R.sameas(other.R))
+    def right(self):
+        return self.child(1)
 
     def toString(self, op):
-        return '{}{}{}'.format(Expr._maybeParenthesize(self.L),
-            op, Expr._maybeParenthesize(self.R))
+        return '{}{}{}'.format(Expr._maybeParenthesize(self.left()),
+            op, Expr._maybeParenthesize(self.right()))
 
-
+    def isSpatialConstant(self):
+        return self.left().isSpatialConstant() and self.right().isSpatialConstant()
 
 class SumExpr(BinaryExpr):
     def __init__(self, L, R, sign):
@@ -360,28 +396,61 @@ class SumExpr(BinaryExpr):
             raise ValueError('SumExpr: Nonsense sign argument {}'.format(sign))
 
     def _sameas(self, other):
-        return (self.L.sameas(other.L) and self.R.sameas(other.R)
+        return (self.left().sameas(other.left()) and self.right().sameas(other.right())
             and self.sign==other.sign)
 
     def __str__(self):
         return super().toString(self.op)
 
     def __repr__(self):
-        return 'SumExpr[left={}, right={}, shape={}]'.format(self.L.__repr__(),
-            self.R.__repr__(), self.shape())
+        return 'SumExpr[left={}, right={}, shape={}]'.format(self.left().__repr__(),
+            self.right().__repr__(), self.shape())
 
 
 class ProductExpr(BinaryExpr):
     def __init__(self, L, R):
-        super().__init__(L, R, ExprShape.productShape(L.shape(), R.shape()))
+        super().__init__(L, R, ScalarShape())
 
     def __str__(self):
         return super().toString('*')
 
     def __repr__(self):
-        return 'ProductExpr[left={}, right={}, shape={}]'.format(self.L.__repr__(),
-            self.R.__repr__(), self.shape())
+        return 'ProductExpr[left={}, right={}]'.format(self.left().__repr__(),
+            self.right().__repr__())
 
+
+def Dot(a, b):
+    assert(isinstance(a.shape(), VectorShape)
+        and isinstance(b.shape(), VectorShape))
+    assert(a.shape().dim == b.shape().dim)
+
+    return DotProductExpr(a,b)
+
+
+class DotProductExpr(BinaryExpr):
+    def __init__(self, L, R):
+        super().__init__(L, R, ExprShape.productShape(L.shape(), R.shape()))
+
+    def __str__(self):
+        return 'dot({},{})'.format(self.left(), self.right())
+
+    def __repr__(self):
+        return 'DotProductExpr[left={}, right={}, shape={}]'.format(self.left().__repr__(),
+            self.right().__repr__(), self.shape())
+
+def Cross(a, b):
+    assert(isinstance(a.shape(), VectorShape)
+        and isinstance(b.shape(), VectorShape))
+    assert(a.shape().dim == b.shape().dim)
+
+    return CrossProductExpr(a,b,a.shape())
+
+class CrossProductExpr(BinaryExpr):
+    def __init__(self, L, R, shape):
+        pass
+
+    def __str__(self):
+        return 'cross({},{})'.format(self.L, self.R)
 
 class QuotientExpr(BinaryExpr):
     def __init__(self, L, R):
@@ -501,9 +570,20 @@ class VectorExprIterator:
 
 class VectorElementInterface:
 
-    def __init__(self, parent, myIndex):
-        self.parent = parent
-        self.myIndex = myIndex
+    def __init__(self, parent, index):
+        self._parent = parent
+        self._index = index
+
+    def parent(self):
+        return _parent
+
+    def index(self):
+        return _index
+
+    def __str__(self):
+        return '{}[{}]'.format(self.parent(), self.index())
+
+
 
 
 class ConstantVectorExpr(ConstantExprBase, VectorExprInterface):

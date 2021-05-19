@@ -2,11 +2,13 @@ from abc import ABC, abstractmethod
 from Expr import Expr, UnaryExpr, Coordinate, ListExpr
 from ExprShape import (ExprShape, ScalarShape, TensorShape, VectorShape)
 from VectorExprs import Vector
+from SymbolicFunction import SymbolicFunctionBase
 import pytest
 
 class DiffOp(UnaryExpr):
 
     def __init__(self, op, arg):
+        assert(isinstance(op, HungryDiffOp))
         if op.acceptShape(arg.shape()):
             myShape = op.outputShape(arg.shape())
         else:
@@ -21,6 +23,14 @@ class DiffOp(UnaryExpr):
 
 
 
+class DiffOpOnFunction(DiffOp):
+
+    def __init__(self, op, arg):
+        assert(isinstance(arg, SymbolicFunctionBase))
+        super().init(op, arg)
+
+    def funcID(self):
+        return self.
 
 
 class HungryDiffOp(ABC):
@@ -55,8 +65,36 @@ class HungryDiffOp(ABC):
 
 
         # Form the diff op expression
+        if isinstance(f, SymbolicFunctionBase):
+            return DiffOpOnFunction(self, f)
         return DiffOp(self, f)
 
+
+class _IdentityOp(HungryDiffOp):
+    def __init__(self):
+        super().__init__()
+
+    def __call__(self, arg):
+        return arg
+
+    def acceptShape(self, input):
+        return True
+
+    def outputShape(self, input):
+        return input
+
+    def __str__(self):
+        return 'IdentityOp'
+
+def Partial(f, coord):
+    if isinstance(coord, int):
+        op = _Partial(coord)
+    elif isinstance(coord, Coordinate):
+        op = _Partial(coord.dir)
+    else:
+        raise ValueError('unable to interpret direction {} in Partial()'.format(coord))
+
+    return op(f)
 
 class _Partial(HungryDiffOp):
     def __init__(self, dir, name=None):

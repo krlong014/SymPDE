@@ -1,8 +1,11 @@
 from abc import ABC, abstractmethod
+from numpy import exp, sqrt
 import numpy as np
 from Expr import (Expr, BinaryExpr, SumExpr, ProductExpr, UnaryMinus,
+                  DotProductExpr, CrossProductExpr,
                   QuotientExpr, PowerExpr, UnaryExpr, ConstantExprBase,
                   Coordinate)
+from ElemFunc import ElemFuncExpr, Exp, Sqrt, ArcTan2Func, ArcTan2
 
 
 
@@ -15,14 +18,14 @@ class SimpleEvaluator(ABC):
 class UnaryEvaluator(SimpleEvaluator):
     def __init__(self, expr):
         assert(isinstance(expr, UnaryExpr))
-        self.arg = makeEval(expr.arg)
+        self.arg = makeEval(expr.arg())
 
 
 class BinaryEvaluator(SimpleEvaluator):
     def __init__(self, expr):
         assert(isinstance(expr, BinaryExpr))
-        self.L = makeEval(expr.L)
-        self.R = makeEval(expr.R)
+        self.L = makeEval(expr.left())
+        self.R = makeEval(expr.right())
 
 class SumEvaluator(BinaryEvaluator):
     def __init__(self, expr):
@@ -43,6 +46,22 @@ class ProductEvaluator(BinaryEvaluator):
 
     def eval(self, varMap):
         return self.L.eval(varMap) * self.R.eval(varMap)
+
+class DotProductEvaluator(BinaryEvaluator):
+    def __init__(self, expr):
+        super().__init__(expr)
+        assert(isinstance(expr, DotProductExpr))
+
+    def eval(self, varMap):
+        return np.dot(self.L.eval(varMap), self.R.eval(varMap))
+
+class CrossProductEvaluator(BinaryEvaluator):
+    def __init__(self, expr):
+        super().__init__(expr)
+        assert(isinstance(expr, CrossProductExpr))
+
+    def eval(self, varMap):
+        return np.cross(self.L.eval(varMap), self.R.eval(varMap))
 
 class QuotientEvaluator(BinaryEvaluator):
     def __init__(self, expr):
@@ -86,6 +105,44 @@ class CoordinateEvaluator(SimpleEvaluator):
     def eval(self, varMap):
         return varMap[self.coord]
 
+class ElemFuncEvaluator(UnaryEvaluator):
+    funcMap = {
+        'Exp': np.exp,
+        'Log': np.log,
+        'Sqrt': np.sqrt,
+        'Cos': np.cos,
+        'Sin': np.sin,
+        'Tan': np.tan,
+        'Cosh': np.cosh,
+        'Sinh': np.sinh,
+        'Tanh': np.tanh,
+        'ArcCos': np.arccos,
+        'ArcSin': np.arcsin,
+        'ArcTan': np.arctan,
+        'ArcCosh': np.arccosh,
+        'ArcSinh': np.arcsinh,
+        'ArcTanh': np.arctanh,
+        'ArcTan2' : np.arctan2
+    }
+
+    def __init__(self, expr):
+        assert(isinstance(expr, ElemFuncExpr))
+        super().__init__(expr)
+        self._func = ElemFuncEvaluator.funcMap[expr.name()]
+
+    def eval(self, varMap):
+        return self._func(self.arg.eval(varMap))
+
+class ArcTan2Evaluator(BinaryEvaluator):
+    def __init__(self, expr):
+        assert(isinstance(expr, ArcTan2Func))
+        super().__init__(expr)
+
+    def eval(self, varMap):
+        yVal = self.L.eval(varMap)
+        xVal = self.R.eval(varMap)
+        return np.arctan2(yVal, xVal)
+
 
 def makeEval(expr):
     evalMap = {
@@ -93,9 +150,13 @@ def makeEval(expr):
         Coordinate : CoordinateEvaluator,
         SumExpr : SumEvaluator,
         ProductExpr : ProductEvaluator,
+        DotProductExpr : DotProductEvaluator,
+        CrossProductExpr : CrossProductEvaluator,
         QuotientExpr : QuotientEvaluator,
         PowerExpr : PowerEvaluator,
-        UnaryMinus : UnaryMinusEvaluator
+        UnaryMinus : UnaryMinusEvaluator,
+        ElemFuncExpr : ElemFuncEvaluator,
+        ArcTan2Func : ArcTan2Evaluator
     }
 
     for k in evalMap.keys():
@@ -105,8 +166,9 @@ def makeEval(expr):
     raise ValueError('unknown expr type [{}]'.format(expr))
 
 def evalRaw(varNames, varVals, exprString, constNames=[], constVals=[]):
-    varMap = {}
 
+    varMap = ElemFuncEvaluator.funcMap
+    
     for name,val in zip(varNames, varVals):
         varMap[name]=val
 
@@ -118,7 +180,7 @@ def evalRaw(varNames, varVals, exprString, constNames=[], constVals=[]):
 
 def evalExpr(varNames, varVals, exprString, constNames=[], constVals=[]):
 
-    varToExprMap = {}
+    varToExprMap = {'Exp' : Exp, 'Sqrt' : Sqrt, 'ArcTan2' : ArcTan2}
     varToValMap = {}
 
     for i,(name,val) in enumerate(zip(varNames, varVals)):
@@ -129,6 +191,8 @@ def evalExpr(varNames, varVals, exprString, constNames=[], constVals=[]):
     for name,val in zip(constNames, constVals):
         varToExprMap[name]=val
 
+    #print('expr to eval: {}'.format(exprString), flush=True)
+    #print('var to expr map: {}'.format(varToExprMap), flush=True)
     expr = eval(exprString, varToExprMap)
     evaluator = makeEval(expr)
 
@@ -140,11 +204,3 @@ def compareEval(varNames, varVals, exprString, constNames={}, constVals={}):
     raw = evalRaw(varNames, varVals, exprString, constNames, constVals)
 
     return (ex, raw)
-
-
-if __name__=='__main__':
-
-    print('raw=', evalRaw(('x', 'y'), (1.5, 0.25), '2*x*y+y/2'))
-    print('ex=', evalExpr(('x', 'y'), (1.5, 0.25), '2*x*y+y/2'))
-
-    print('comparing ', compareEval(('x', 'y'), (1.5, 0.25), '2*x*y+y/2'))
