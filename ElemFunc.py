@@ -1,10 +1,11 @@
+from abc import ABC, abstractmethod
 from Expr import Expr, UnaryExpr, BinaryExpr, Coordinate
 from ExprShape import ScalarShape
 
 
 ## Generic one-argument elementary function
 
-class ElemFuncExpr(UnaryExpr):
+class ElemFuncExpr(UnaryExpr, ABC):
     def __init__(self, name, arg):
         assert(Expr._convertibleToExpr(arg))
         expr = Expr._convertToExpr(arg)
@@ -23,69 +24,13 @@ class ElemFuncExpr(UnaryExpr):
     def __repr__(self):
         return 'ElemFuncExpr[name={}, arg={}]'.format(self._name, self.arg())
 
-    
+    @abstractmethod
+    def deriv(self, x):
+        pass
 
 
-##############################################################################
-# The classic functions
-##############################################################################
 
-# Exp and log
 
-def Exp(x):
-    return ElemFuncExpr('Exp', x)
-
-def Log(x):
-    return ElemFuncExpr('Log', x)
-
-# Square root
-
-def Sqrt(x):
-    return ElemFuncExpr('Sqrt', x)
-
-# Trig functions
-
-def Cos(x):
-    return ElemFuncExpr('Cos', x)
-
-def Sin(x):
-    return ElemFuncExpr('Sin', x)
-
-def Tan(x):
-    return ElemFuncExpr('Tan', x)
-
-# Hyperbolic functions
-
-def Cosh(x):
-    return ElemFuncExpr('Cosh', x)
-
-def Sinh(x):
-    return ElemFuncExpr('Sinh', x)
-
-def Tanh(x):
-    return ElemFuncExpr('Tanh', x)
-
-# Inverse trig functions
-
-def ArcCos(x):
-    return ElemFuncExpr('ArcCos', x)
-
-def ArcSin(x):
-    return ElemFuncExpr('ArcSin', x)
-
-def ArcTan(x):
-    return ElemFuncExpr('ArcTan', x)
-
-# Inverse hyperbolic functions
-
-def ArcCosh(x):
-    return ElemFuncExpr('ArcCosh', x)
-
-def ArcSinh(x):
-    return ElemFuncExpr('ArcSinh', x)
-
-def ArcTanh(x):
-    return ElemFuncExpr('ArcTanh', x)
 
 # The two-argument arctangent arctan2(y,x)
 class ArcTan2Func(BinaryExpr):
@@ -103,3 +48,188 @@ class ArcTan2Func(BinaryExpr):
 
 def ArcTan2(y, x):
     return ArcTan2Func(y, x)
+
+
+##############################################################################
+# The classic functions
+##############################################################################
+
+
+class ExpFunc(ElemFuncExpr):
+    def __init__(self, x):
+        super().__init__('Exp', x)
+
+    def deriv(self, x):
+        return Exp(x)
+
+
+def Exp(x):
+    return ExpFunc(x)
+
+
+class LogFunc(ElemFuncExpr):
+    def __init__(self, x):
+        super().__init__('Log', x)
+
+    def deriv(self, x):
+        return 1/x
+
+
+def Log(x):
+    return LogFunc(x)
+
+
+class SqrtFunc(ElemFuncExpr):
+    def __init__(self, x):
+        super().__init__('Sqrt', x)
+
+    def deriv(self, x):
+        return 1/2/Sqrt(x)
+
+
+def Sqrt(x):
+    return SqrtFunc(x)
+
+
+class CosFunc(ElemFuncExpr):
+    def __init__(self, x):
+        super().__init__('Cos', x)
+
+    def deriv(self, x):
+        return -Sin(x)
+
+
+def Cos(x):
+    return CosFunc(x)
+
+
+class SinFunc(ElemFuncExpr):
+    def __init__(self, x):
+        super().__init__('Sin', x)
+
+    def deriv(self, x):
+        return Cos(x)
+
+
+def Sin(x):
+    return SinFunc(x)
+
+
+class TanFunc(ElemFuncExpr):
+    def __init__(self, x):
+        super().__init__('Tan', x)
+
+    def deriv(self, x):
+        return 1/Cos(x)**2
+
+
+def Tan(x):
+    return TanFunc(x)
+
+
+class CoshFunc(ElemFuncExpr):
+    def __init__(self, x):
+        super().__init__('Cosh', x)
+
+    def deriv(self, x):
+        return Sinh(x)
+
+
+def Cosh(x):
+    return CoshFunc(x)
+
+
+class SinhFunc(ElemFuncExpr):
+    def __init__(self, x):
+        super().__init__('Sinh', x)
+
+    def deriv(self, x):
+        return Cosh(x)
+
+
+def Sinh(x):
+    return SinhFunc(x)
+
+
+class TanhFunc(ElemFuncExpr):
+    def __init__(self, x):
+        super().__init__('Tanh', x)
+
+    def deriv(self, x):
+        return 1/Cosh(x)**2
+
+
+def Tanh(x):
+    return TanhFunc(x)
+
+
+class ArcCosFunc(ElemFuncExpr):
+    def __init__(self, x):
+        super().__init__('ArcCos', x)
+
+    def deriv(self, x):
+        return -1/Sqrt(1-x**2)
+
+
+def ArcCos(x):
+    return ArcCosFunc(x)
+
+
+class ArcSinFunc(ElemFuncExpr):
+    def __init__(self, x):
+        super().__init__('ArcSin', x)
+
+    def deriv(self, x):
+        return 1/Sqrt(1-x**2)
+
+
+def ArcSin(x):
+    return ArcSinFunc(x)
+
+
+class ArcTanFunc(ElemFuncExpr):
+    def __init__(self, x):
+        super().__init__('ArcTan', x)
+
+    def deriv(self, x):
+        return 1/(1+x**2)
+
+
+def ArcTan(x):
+    return ArcTanFunc(x)
+
+
+class ArcCoshFunc(ElemFuncExpr):
+    def __init__(self, x):
+        super().__init__('ArcCosh', x)
+
+    def deriv(self, x):
+        return 1/Sqrt(x**2-1)
+
+
+def ArcCosh(x):
+    return ArcCoshFunc(x)
+
+
+class ArcSinhFunc(ElemFuncExpr):
+    def __init__(self, x):
+        super().__init__('ArcSinh', x)
+
+    def deriv(self, x):
+        return 1/Sqrt(1+x**2)
+
+
+def ArcSinh(x):
+    return ArcSinhFunc(x)
+
+
+class ArcTanhFunc(ElemFuncExpr):
+    def __init__(self, x):
+        super().__init__('ArcTanh', x)
+
+    def deriv(self, x):
+        return 1/(1-x**2)
+
+
+def ArcTanh(x):
+    return ArcTanhFunc(x)

@@ -33,7 +33,7 @@ def spatialDiff(expr, op):
         return differentiateCoordinate(expr, op)
 
 
-def differentiateProduct(expr, op):
-    assert(isinstance(expr, ProductExpr))
-
-    if
+# def differentiateProduct(expr, op):
+#     assert(isinstance(expr, ProductExpr))
+#
+#     if

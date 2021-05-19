@@ -30,7 +30,7 @@ class DiffOpOnFunction(DiffOp):
         super().init(op, arg)
 
     def funcID(self):
-        return self.
+        return self.arg().funcID()
 
 
 class HungryDiffOp(ABC):
