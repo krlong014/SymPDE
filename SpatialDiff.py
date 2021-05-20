@@ -3,7 +3,7 @@ def spatialDiff(expr, op):
 
     # Make sure arguments are valid
     assert(isinstance(expr, Expr) and isinstance(op, HungryDiffOp))
-    assert(not isinstance(expr, ListExpr))
+    assert(not isinstance(expr, AggExpr))
 
     if expr.isSpatialConstant():
         return 0
