@@ -344,7 +344,7 @@ class TestArithmetic:
 
 
 
-class xTestComplicated:
+class TestComplicated:
 
     def test_Complicated1(self):
         (ex,raw) = compareEval(('x','y'), (1.5,5.4),
@@ -362,7 +362,7 @@ class xTestComplicated:
 
 
 
-class xTestExpectedErrors:
+class TestExpectedErrors:
 
     def test_ZeroDiv1(self):
         with pytest.raises(ZeroDivisionError) as err_info:
