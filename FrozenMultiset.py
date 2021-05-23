@@ -17,12 +17,12 @@ class FrozenMultiset:
             raise ValueError('FrozenMultiset ctor expected a list or tuple ',
             'got ', input)
 
-        keyList = []
+        keyAgg = []
         data = []
         for k,v in tmp.items():
-            keyList.append(k)
+            keyAgg.append(k)
             data.append((k,v))
-        self.keyList = tuple(keyList)
+        self.keyAgg = tuple(keyAgg)
         self.data = tuple(data)
 
     # Find the multiplicity of an item in a FrozenMultiset. If it doesn't
@@ -34,7 +34,7 @@ class FrozenMultiset:
 
     # Determine whether a FrozenMultiset contains a given value
     def contains(self, x):
-        return x in self.keyList
+        return x in self.keyAgg
 
     # Make a new FrozenMultiset with one more entry added.
     def copyAndAppend(self, y):

@@ -5,7 +5,10 @@ from Expr import (Expr, BinaryExpr, SumExpr, ProductExpr, UnaryMinus,
                   DotProductExpr, CrossProductExpr,
                   QuotientExpr, PowerExpr, UnaryExpr, ConstantExprBase,
                   Coordinate)
-from ElemFunc import ElemFuncExpr, Exp, Sqrt, ArcTan2Func, ArcTan2
+from UnivariateFunc import (UnivariateFuncExpr, Exp, Log, Sqrt, ArcTan2Func, ArcTan2,
+                      Cos, Sin, Tan, Cosh, Sinh, Tanh,
+                      ArcCos, ArcSin, ArcTan, ArcCosh, ArcSinh, ArcTanh)
+
 
 
 
@@ -105,7 +108,7 @@ class CoordinateEvaluator(SimpleEvaluator):
     def eval(self, varMap):
         return varMap[self.coord]
 
-class ElemFuncEvaluator(UnaryEvaluator):
+class UnivariateFuncEvaluator(UnaryEvaluator):
     funcMap = {
         'Exp': np.exp,
         'Log': np.log,
@@ -126,9 +129,9 @@ class ElemFuncEvaluator(UnaryEvaluator):
     }
 
     def __init__(self, expr):
-        assert(isinstance(expr, ElemFuncExpr))
+        assert(isinstance(expr, UnivariateFuncExpr))
         super().__init__(expr)
-        self._func = ElemFuncEvaluator.funcMap[expr.name()]
+        self._func = UnivariateFuncEvaluator.funcMap[expr.name()]
 
     def eval(self, varMap):
         return self._func(self.arg.eval(varMap))
@@ -155,7 +158,7 @@ def makeEval(expr):
         QuotientExpr : QuotientEvaluator,
         PowerExpr : PowerEvaluator,
         UnaryMinus : UnaryMinusEvaluator,
-        ElemFuncExpr : ElemFuncEvaluator,
+        UnivariateFuncExpr : UnivariateFuncEvaluator,
         ArcTan2Func : ArcTan2Evaluator
     }
 
@@ -167,8 +170,8 @@ def makeEval(expr):
 
 def evalRaw(varNames, varVals, exprString, constNames=[], constVals=[]):
 
-    varMap = ElemFuncEvaluator.funcMap
-    
+    varMap = UnivariateFuncEvaluator.funcMap
+
     for name,val in zip(varNames, varVals):
         varMap[name]=val
 
@@ -180,7 +183,22 @@ def evalRaw(varNames, varVals, exprString, constNames=[], constVals=[]):
 
 def evalExpr(varNames, varVals, exprString, constNames=[], constVals=[]):
 
-    varToExprMap = {'Exp' : Exp, 'Sqrt' : Sqrt, 'ArcTan2' : ArcTan2}
+    varToExprMap = {'Exp' : Exp,
+        'Sqrt' : Sqrt,
+        'Log' : Log,
+        'Cos' : Cos,
+        'Sin' : Sin,
+        'Tan' : Tan,
+        'Cosh' : Cosh,
+        'Sinh' : Sinh,
+        'Tanh' : Tanh,
+        'ArcCos' : ArcCos,
+        'ArcSin' : ArcSin,
+        'ArcTan' : ArcTan,
+        'ArcCosh' : ArcCosh,
+        'ArcSinh' : ArcSinh,
+        'ArcTanh' : ArcTanh,
+        'ArcTan2' : ArcTan2}
     varToValMap = {}
 
     for i,(name,val) in enumerate(zip(varNames, varVals)):
