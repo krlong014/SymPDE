@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from Expr import Expr, UnaryExpr, Coordinate, ListExpr
+from Expr import Expr, UnaryExpr, Coordinate, AggExpr
 from ExprShape import (ExprShape, ScalarShape, TensorShape, VectorShape)
 from VectorExprs import Vector
 from SymbolicFunction import SymbolicFunctionBase
@@ -99,11 +99,11 @@ def Partial(f, coord):
 class _Partial(HungryDiffOp):
     def __init__(self, dir, name=None):
         super().__init__()
-        self.dir = dir
+        self._dir = dir
         if name==None:
-            self.myName = Expr._dirName(dir)
+            self._name = Expr._dirName(dir)
         else:
-            self.myName = name
+            self._name = name
 
     def acceptShape(self, input):
         return True
@@ -111,8 +111,11 @@ class _Partial(HungryDiffOp):
     def outputShape(self, input):
         return input
 
+    def direction(self):
+        return self._dir
+
     def __str__(self):
-        return 'd_d{}'.format(self.myName)
+        return 'd_d{}'.format(self._name)
 
 def Partial(f, coord):
     if isinstance(coord, int):
@@ -137,7 +140,7 @@ class _Div(HungryDiffOp):
         if isinstance(input, (VectorShape, VectorShape)):
             return ScalarShape()
         if isinstance(input, TensorShape):
-            return VectorShape(input.dim)
+            return VectorShape(input.dim())
         raise ValueError(
             'Div.outputShape expected vector or tensor, got [{}]'.format(input)
             )
@@ -153,16 +156,19 @@ def Div(f):
 class _Gradient(HungryDiffOp):
     def __init__(self, dim):
         super().__init__()
-        self.dim=dim
+        self._dim=dim
+
+    def dim(self):
+        return self._dim
 
     def acceptShape(self, input):
         return not isinstance(input, TensorShape)
 
     def outputShape(self, input):
         if isinstance(input, ScalarShape):
-            return VectorShape(self.dim)
+            return VectorShape(self.dim())
         if isinstance(input, VectorShape):
-            return TensorShape(self.dim)
+            return TensorShape(self.dim())
         raise ValueError('grad.outputShape expected scalar or vector, got [{}]'.format(input))
 
     def __str__(self):
@@ -173,7 +179,7 @@ class _Curl(HungryDiffOp):
         super().__init__()
 
     def acceptShape(self, input):
-        return isinstance(input, VectorShape) and input.dim==3
+        return isinstance(input, VectorShape) and input.dim()==3
 
     def outputShape(self, input):
         assert(self.acceptShape(input))
@@ -193,7 +199,7 @@ class _Rot(HungryDiffOp):
         super().__init__()
 
     def acceptShape(self, input):
-        return isinstance(input, VectorShape) and input.dim==2
+        return isinstance(input, VectorShape) and input.dim()==2
 
     def outputShape(self, input):
         assert(self.acceptShape(input))
@@ -262,7 +268,7 @@ class TestDiffOpSanity:
         curlF = Curl(F)
 
         print('Curl(F)=', curlF)
-        assert(curlF.sameas(DiffOp(curl, F)) and curlF.shape().dim==3)
+        assert(curlF.sameas(DiffOp(curl, F)) and curlF.shape().dim()==3)
 
 
     def test_Rot(self):
@@ -346,12 +352,12 @@ class TestDiffOpExpectedErrors:
 
 
 
-    def test_DiffOpOfList(self):
+    def test_DiffOpOfAgg(self):
         with pytest.raises(TypeError) as err_info:
             x = Coordinate(0)
             y = Coordinate(1)
             z = Coordinate(2)
-            L = ListExpr(x,y,z)
+            L = AggExpr(x,y,z)
 
             bad = Rot(L)
 

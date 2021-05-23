@@ -1,6 +1,6 @@
 from Expr import Expr, VectorExprInterface, VectorElementInterface
 from ExprShape import (ExprShape, ScalarShape, TensorShape,
-        VectorShape, ListShape)
+        VectorShape, AggShape)
 from BasisBase import BasisBase, VectorBasisBase, ScalarBasisBase
 
 import pytest
@@ -34,7 +34,7 @@ class SymbolicVectorFunctionBase(SymbolicFunctionBase, VectorExprInterface):
 
         super().__init__(basis, name)
         self._elems = []
-        for i in range(basis.shape().dim):
+        for i in range(basis.shape().dim()):
             self._elems.append(SymbolicVectorFunctionElement(self, i))
 
     def __getitem__(self, i):

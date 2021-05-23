@@ -1,7 +1,7 @@
 from Expr import (Expr, Coordinate, VectorExprInterface, VectorExprIterator,
-                    ListExpr, ConstantVectorExpr)
+                    AggExpr, ConstantVectorExpr)
 from ExprShape import (ExprShape, ScalarShape, TensorShape,
-        VectorShape, ListShape)
+        VectorShape, AggShape)
 from numpy import ndarray, array
 from numbers import Number
 import pytest
@@ -26,7 +26,7 @@ def Vector(*args):
     # if the input is a 1D list or tuple:
     #   (*) Form a ConstantVectorExpr if all the elements are constants
     #   (*) Form a VectorExpr otherwise
-    if isinstance(x, (list, tuple, ListExpr)):
+    if isinstance(x, (list, tuple, AggExpr)):
         allConsts = True
         elems = []
         if len(x) == 1:
@@ -53,7 +53,7 @@ def Vector(*args):
             exprElems = []
             for e in elems:
                 exprElems.append(Expr._convertToExpr(e))
-            return ListedVectorExpr(exprElems)
+            return AggedVectorExpr(exprElems)
 
     # If the input is a tensor, this won't work
     if isinstance(x, Expr) and isinstance(x.shape(), TensorShape):
@@ -67,7 +67,7 @@ def Vector(*args):
     raise ValueError('bad input {} to Vector()')
 
 
-class ListedVectorExpr(Expr, VectorExprInterface):
+class AggedVectorExpr(Expr, VectorExprInterface):
 
     def __init__(self, elems):
         self._elems = elems

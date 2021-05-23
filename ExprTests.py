@@ -2,7 +2,10 @@ import pytest
 import numpy as np
 from Expr import (Expr, ConstantScalarExpr, ConstantVectorExpr,
     Coordinate)
-from ElemFunc import Exp, Sqrt
+from UnivariateFunc import (Exp, Sqrt, Log, Cos, Sin, Tan,
+                    Cosh, Sinh, Tanh, ArcCos, ArcSin, ArcTan,
+                    ArcCosh, ArcSinh, ArcTanh)
+
 from SimpleEvaluator import compareEval, evalExpr
 
 
@@ -332,9 +335,69 @@ class TestArithmetic:
             '(1+x*y)**(y*2-1)')
         assert(ex==raw)
 
-    def test_ElemFunc1(self):
+    def test_UnivariateFunc1(self):
         (ex,raw) = compareEval(('x','y'), (1.5,5.4),
             'Exp(x)*Sqrt(x)')
+        assert(ex==raw)
+
+    def test_UnivariateFunc2(self):
+        (ex,raw) = compareEval(('x','y'), (1.5,5.4),
+            'Exp(x)*Sqrt(x+y)')
+        assert(ex==raw)
+
+    def test_UnivariateFunc2(self):
+        (ex,raw) = compareEval(('x','y'), (1.5,5.4),
+            'Exp(x)*Sqrt(x+y)')
+        assert(ex==raw)
+
+    def test_UnivariateFunc3(self):
+        (ex,raw) = compareEval(('x','y'), (1.5,5.4),
+            'Cosh(x)')
+        assert(ex==raw)
+
+    def test_UnivariateFunc4(self):
+        (ex,raw) = compareEval(('x','y'), (1.5,5.4),
+            'Sinh(x)')
+        assert(ex==raw)
+
+    def test_UnivariateFunc5(self):
+        (ex,raw) = compareEval(('x','y'), (1.5,5.4),
+            'Tanh(x)')
+        assert(ex==raw)
+
+    def test_UnivariateFunc6(self):
+        (ex,raw) = compareEval(('x',), (0.5,),
+            'ArcCos(x)')
+        assert(ex==raw)
+
+    def test_UnivariateFunc7(self):
+        (ex,raw) = compareEval(('x',), (0.5,),
+            'ArcSin(x)')
+        assert(ex==raw)
+
+    def test_UnivariateFunc8(self):
+        (ex,raw) = compareEval(('x',), (0.5,),
+            'ArcTan(x)')
+        assert(ex==raw)
+
+    def test_UnivariateFunc9(self):
+        (ex,raw) = compareEval(('x',), (1.5,),
+            'ArcCosh(x)')
+        assert(ex==raw)
+
+    def test_UnivariateFunc10(self):
+        (ex,raw) = compareEval(('x',), (0.5,),
+            'ArcSinh(x)')
+        assert(ex==raw)
+
+    def test_UnivariateFunc11(self):
+        (ex,raw) = compareEval(('x',), (0.5,),
+            'ArcTanh(x)')
+        assert(ex==raw)
+
+    def test_UnivariateFunc12(self):
+        (ex,raw) = compareEval(('x',), (0.5,),
+            'Log(x)')
         assert(ex==raw)
 
     def test_ArcTan2(self):

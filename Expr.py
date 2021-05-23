@@ -1,103 +1,144 @@
+# =============================================================================
+#
+# =============================================================================
 from abc import ABC, abstractmethod
 from ExprShape import (ExprShape, ScalarShape, TensorShape,
-    VectorShape, ListShape)
+    VectorShape, AggShape)
 from numbers import Number
 from numpy.linalg import norm
 from numpy import dot, array_equiv, inf, ndarray
 import copy
 
 class Expr(ABC):
-    """
-    Expr is the base class for symbolic expressions
-    """
+    '''Expr is the base class for symbolic expressions.'''
     def __init__(self, shape):
-        """
-        Constructor for base class
-        """
+        '''Construct an expression of a specified shape.'''
         assert(isinstance(shape, ExprShape))
         self._shape = shape
 
+    # Describe the structure ('shape') of the expression: scalar,
+    # vector, tensor, or list.
     def shape(self):
+        '''Return the shape (scalar, vector, tensor) of the expression.'''
         return self._shape
 
-    def __len__(self):
-        return self.shape().dim
+    def isScalar(self):
+        '''Return true if is scalar, false otherwise'''
+        return isinstance(self.shape(), ScalarShape)
 
+    def isVector(self):
+        '''Return true if is vector, false otherwise'''
+        return isinstance(self.shape(), ScalarShape)
+
+    def __len__(self):
+        '''Return the dimension:
+        1 for scalars, spatial dim for vectors/tensors.'''
+        return self.shape().dim()
+
+    # Compare contents with another expression. The sameas() function is used
+    # to indicate identical contents rather than identical objects. The
+    # top-level sameas() function compares type and shape. If type and shape
+    # are the same, then the type's internal _sameas() function is called
+    # to do a detailed comparison of contents.
     def sameas(self, other):
+        '''Return true if self and other have same contents.'''
         return (type(self)==type(other)
             and self.shape().sameas(other.shape())
             and self._sameas(other))
 
     @abstractmethod
     def _sameas(self, other):
+        '''Compare to another expression that can be assumed to be of the same type.'''
         pass
 
+    # Detect constant expression.
     def isConstant(self):
+        '''Indicate whether an expression is constant, i.e., independent
+        of space and unable to be changed by the user. A Parameter is not
+        a constant.'''
         return False
 
+    # Detect spatially constant expressions. This includes not only numerical
+    # constants but parameters that might change (e.g., design parameters,
+    # simulation time) but don't depend on space.
     def isSpatialConstant(self):
+        '''Indicate whether an expression does not depend on space.'''
         return False
 
-    def getConstantValue(self):
-        return None
+    # =========================================================================
+    # Overloaded operators
+    # Note: is __op__() is a binary operation, then __rop__() is used when the
+    # left-hand operand is a basic type and not an object.
+    #
+    # With the exception of the negation operator, these functions are
+    # thin interfaces to internal functions.
+    # =========================================================================
 
     def __neg__(self):
-        """Unary minus operator"""
+        '''Negate self.'''
         if isinstance(self, ConstantExprBase):
             rtn = copy.deepcopy(self)
             rtn._data = -rtn._data
             return rtn
-        if isinstance(self, ListExpr):
-            raise ValueError('cannot negate a ListExpr')
+        if isinstance(self, AggExpr):
+            raise ValueError('cannot negate a AggExpr')
         return UnaryMinus(self)
 
     def __add__(self, other):
-        """Add two expressions"""
+        '''Add self + other. Expressions must have same shape.'''
         return Expr._addOrSubtract(self, other, 1)
 
     def __sub__(self, other):
-        """Subtract two expressions"""
+        '''Subtract self - other. Expressions must have same shape.'''
         return Expr._addOrSubtract(self, other, -1)
 
 
     def __mul__(self, other):
-        """Multiply two expressions"""
+        '''Multiply self * other. Expressions must have compatible shapes for
+        scalar-scalar multiplication,
+        vector-scalar and scalar-vector multiplication, the
+        vector dot product, vector-tensor and tensor-vector products.'''
         return Expr._multiply(self, other)
 
     def __truediv__(self, other):
-        """Divide two expressions"""
+        '''Divide self/other. Denominator must be a scalar.'''
         return Expr._divide(self, other)
 
     def __pow__(self, other):
-        """Raise an expression to a power"""
+        '''Raise self to the power other. Both must be scalars.'''
         return Expr._power(self, other)
 
     def __radd__(self, other):
-        """Add an expression to a constant"""
+        '''Add other + self, when 'other' is a number.'''
         return Expr._addOrSubtract(other, self, 1)
 
     def __rsub__(self, other):
-        """Subtract an expression from a constant"""
+        '''Subtract other - self, when 'other' is a number.'''
         return Expr._addOrSubtract(other, self, -1)
 
 
     def __rmul__(self, other):
-        """Multiply a constant by an expression"""
+        '''Multiply other * self, when 'other' is a number.'''
         return Expr._multiply(other, self)
 
     def __rtruediv__(self, other):
-        """Divide a constant by an expression"""
+        '''Divide other/self, when 'other' is a number.'''
         return Expr._divide(other, self)
 
     def __rpow__(self, other):
-        """Raise a constant to the power of an expression"""
+        '''Raise 'other' to the power 'self', when 'other' is a number.'''
         return Expr._power(other, self)
 
 
-    ## -------------- internal Expr methods ----------------
+    # =========================================================================
+    # Internal arithmetic operations. The overloaded operators delegate to
+    # these. In these functions: operands are checked for compatibiity,
+    # possible simplifications are detected and used, the shape of the output
+    # is determined, and then the resulting expression is returned.
+    # =========================================================================
 
     def _addOrSubtract(leftIn, rightIn, sign):
-
+        '''Internal addition/subtraction.'''
         # Convert input to Expr
         left = Expr._convertToExpr(leftIn)
         right = Expr._convertToExpr(rightIn)
@@ -122,7 +163,7 @@ class Expr(ABC):
 
 
     def _multiply(leftIn, rightIn):
-
+        '''Internal multiplication.'''
         # Convert input to Expr
         left = Expr._convertToExpr(leftIn)
         right = Expr._convertToExpr(rightIn)
@@ -154,24 +195,24 @@ class Expr(ABC):
 
 
     def _divide(leftIn, rightIn):
-
+        '''Internal division.'''
         # Convert input to Expr
         left = Expr._convertToExpr(leftIn)
         right = Expr._convertToExpr(rightIn)
 
 
         # Division by a list is an error
-        if isinstance(right, ListExpr):
+        if isinstance(right, AggExpr):
             raise ValueError(
                 'Division by list is undefined: num={}, den={}'.format(left,right))
 
         # Division of a list is an error
-        if isinstance(left, ListExpr):
+        if isinstance(left, AggExpr):
             raise ValueError(
                 'Dividing a list is undefined: num={}, den={}'.format(left,right))
 
         # Division by a vector or tensor is an error
-        if Expr._getShape(right) != ScalarShape():
+        if not isinstance(Expr._getShape(right),ScalarShape):
             raise ValueError(
                 'Division of [{}] by non-scalar [{}] is undefined.'
                     .format(left.__repr__(), right.__repr__())
@@ -203,16 +244,16 @@ class Expr(ABC):
 
 
     def _power(baseIn, powerIn):
-
+        '''Internal exponentiation.'''
         # Convert input to Expr
         base = Expr._convertToExpr(baseIn)
         power = Expr._convertToExpr(powerIn)
 
         # Exponentiation with non-scalars is undefined here
-        if Expr._getShape(base) != ScalarShape():
+        if (not isinstance(Expr._getShape(base), ScalarShape)):
             raise ValueError('Non-scalar base [{}] in Expr._power'.format(base))
 
-        if Expr._getShape(power) != ScalarShape():
+        if (not isinstance(Expr._getShape(power), ScalarShape)):
             raise ValueError('Non-scalar power [{}] in Expr._power'.format(power))
 
         # Check for zero**zero
@@ -239,33 +280,43 @@ class Expr(ABC):
         return PowerExpr(base, power)
 
 
+    # =========================================================================
+    # Miscellaneous internal maintenance functions.
+    # =========================================================================
 
     def _getShape(x):
+        '''Return the shape of the argument x. '''
         if isinstance(x, Expr):
             return x.shape()
         elif isinstance(x, Number):
             return ScalarShape()
+        raise ValueError('Expr._getShape() got bad arg [{}]'.format(x))
 
 
     def _isConstant(x):
+        '''Determine whether an argument is a constant. '''
         return ((isinstance(x, Expr) and x.isConstant())
                 or isinstance(x, Number))
 
     def _isZero(x):
-        if not x.isConstant():
+        '''Determine whether an argument is identically zero. '''
+        if isinstance(x, Number) and x==0:
+            return True
+        elif not x.isConstant():
             return False
         return x._isZero()
-        raise ValueError('Expr._isZero got bad arg [{}]'.format(x))
+        raise ValueError('Expr._isZero() got bad arg [{}]'.format(x))
 
     def _isIdentity(x):
+        '''Determine whether an argument is a multiplicative identity. '''
         if not x.isConstant():
             return False
         if isinstance(x, ConstantScalarExpr):
             return x.data()==1.0
         # if isinstance(x, ConstantTensorExpr):
         #     d = x.data()
-        #     for i in range(x.shape().dim):
-        #         for j in range(x.shape().dim):
+        #     for i in range(x.shape().dim()):
+        #         for j in range(x.shape().dim()):
         #             if ((i!=j and d[i,j] != 0.0) or (i==j and d[i,j] != 1.0)):
         #                 return False
         #     return True
@@ -273,17 +324,21 @@ class Expr(ABC):
 
 
     def _maybeParenthesize(x):
+        '''Put a sum inside parentheses when printing. '''
         if isinstance(x, SumExpr):
             return '({})'.format(x)
         return '{}'.format(x)
 
 
     def _dirName(dir):
+        '''Return the default names of the specified coordinate. '''
         cart = ('x', 'y', 'z')
         return cart[dir]
 
 
     def _convertToExpr(x):
+        '''Convert input to an expression, if possible. If the input is an
+        expression, return it unmodified.'''
         if isinstance(x, Expr):
             return x
 
@@ -296,6 +351,8 @@ class Expr(ABC):
         raise ValueError('input [{}] cannot be converted to Expr'.format(x))
 
     def _convertibleToExpr(x):
+        '''Indicate whether the argument is of a type that can be
+        converted to an expression. '''
         return isinstance(x, (Expr, Number, ndarray))
 
 
@@ -309,12 +366,14 @@ class Expr(ABC):
 #############################################################################
 
 class ExprWithChildren(Expr):
+    '''ExprWithChildren is a base class for operations that act on other
+    operations.'''
     def __init__(self, children, shape):
-
+        '''Constructor for ExprWithChildren.'''
         if not (isinstance(children, (list, tuple)) and len(children)>0):
             raise ValueError('ExprWithChildren bad input {}'.format(children))
         for c in children:
-            assert(not isinstance(c, ListExpr))
+            assert(not isinstance(c, AggExpr))
 
         super().__init__(shape)
 
@@ -422,7 +481,7 @@ class ProductExpr(BinaryExpr):
 def Dot(a, b):
     assert(isinstance(a.shape(), VectorShape)
         and isinstance(b.shape(), VectorShape))
-    assert(a.shape().dim == b.shape().dim)
+    assert(a.shape().dim() == b.shape().dim())
 
     return DotProductExpr(a,b)
 
@@ -441,7 +500,7 @@ class DotProductExpr(BinaryExpr):
 def Cross(a, b):
     assert(isinstance(a.shape(), VectorShape)
         and isinstance(b.shape(), VectorShape))
-    assert(a.shape().dim == b.shape().dim)
+    assert(a.shape().dim() == b.shape().dim())
 
     return CrossProductExpr(a,b,a.shape())
 
@@ -606,11 +665,11 @@ class ConstantVectorExpr(ConstantExprBase, VectorExprInterface):
             return ConstantVectorExpr(dot(self.data(), other.data()))
 
     def __getitem__(self, i):
-        assert(i>=0 and i<self.shape().dim)
+        assert(i>=0 and i<self.shape().dim())
         return self.data()[i]
 
     def __len__(self):
-        return self.shape().dim
+        return self.shape().dim()
 
 
 
@@ -627,33 +686,36 @@ class Coordinate(Expr):
 
     def __init__(self, dir, name=None):
         super().__init__(ScalarShape())
-        self.dir = dir
+        self._dir = dir
         if name==None:
-            self.name = Expr._dirName(dir)
+            self._name = Expr._dirName(dir)
         else:
-            self.name = name
+            self._name = name
 
     def __str__(self):
-        return self.name
+        return self._name
 
     def __repr__(self):
-        return 'Coordinate[dir={}, name={}, shape={}]'.format(self.dir,
-            self.name, self.shape())
+        return 'Coordinate[dir={}, name={}, shape={}]'.format(self._dir,
+            self._name, self.shape())
 
     def _sameas(self, other):
-        return self.dir==other.dir and self.name==other.name
+        return self._dir==other._dir and self._name==other._name
+
+    def direction(self):
+        return self._dir
 
 
 #############################################################################
 #
-# Class for listing expressions
+# Class for aggregate expressions
 #
 #############################################################################
 
-class ListExpr(Expr):
+class AggExpr(Expr):
 
     def __init__(self, *args):
-        super().__init__(ListShape())
+        super().__init__(AggShape())
 
         if len(args)==1:
             input = args[0]
@@ -662,18 +724,18 @@ class ListExpr(Expr):
 
 
         if not isinstance(input, (list, tuple, Expr, Number, ndarray)):
-            raise ValueError('input [{}] not convertible to ListExpr'.format(input))
+            raise ValueError('input [{}] not convertible to AggExpr'.format(input))
 
-        if isinstance(input, ListExpr):
+        if isinstance(input, AggExpr):
             self.data = input.data
         elif isinstance(input, (list, tuple)):
             self.data = []
             for i,e in enumerate(input):
-                if isinstance(e, ListExpr):
-                    raise ValueError('List within list detected in entry \
+                if isinstance(e, AggExpr):
+                    raise ValueError('Agg within list detected in entry \
                     #{}=[]'.format(i, e))
                 if not Expr._convertibleToExpr(e):
-                    raise ValueError('List entry #{}=[] not convertible \
+                    raise ValueError('Agg entry #{}=[] not convertible \
                     to Expr'.format(i,e))
                 self.data.append(Expr._convertToExpr(e))
         else:
@@ -702,10 +764,10 @@ class ListExpr(Expr):
         return x in self.data
 
     def __iter__(self):
-        return ListExprIterator(self)
+        return AggExprIterator(self)
 
     def __str__(self):
-        rtn = 'List('
+        rtn = 'Agg('
         for i,e in enumerate(self.data):
             if i>0:
                 rtn += ', '
@@ -718,12 +780,12 @@ class ListExpr(Expr):
 
 
 
-class ListExprIterator:
+class AggExprIterator:
     '''Iterator for expressions stored in containers'''
     def __init__(self, parent):
         '''Constructor'''
         self._index = 0
-        assert(isinstance(parent, ListExpr))
+        assert(isinstance(parent, AggExpr))
         self._parent = parent
 
     def __next__(self):
