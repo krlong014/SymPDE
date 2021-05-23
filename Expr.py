@@ -22,6 +22,14 @@ class Expr(ABC):
         '''Return the shape (scalar, vector, tensor) of the expression.'''
         return self._shape
 
+    def isScalar(self):
+        '''Return true if is scalar, false otherwise'''
+        return isinstance(self.shape(), ScalarShape)
+
+    def isVector(self):
+        '''Return true if is vector, false otherwise'''
+        return isinstance(self.shape(), ScalarShape)
+
     def __len__(self):
         '''Return the dimension:
         1 for scalars, spatial dim for vectors/tensors.'''
@@ -358,8 +366,10 @@ class Expr(ABC):
 #############################################################################
 
 class ExprWithChildren(Expr):
+    '''ExprWithChildren is a base class for operations that act on other
+    operations.'''
     def __init__(self, children, shape):
-
+        '''Constructor for ExprWithChildren.'''
         if not (isinstance(children, (list, tuple)) and len(children)>0):
             raise ValueError('ExprWithChildren bad input {}'.format(children))
         for c in children:
@@ -676,21 +686,24 @@ class Coordinate(Expr):
 
     def __init__(self, dir, name=None):
         super().__init__(ScalarShape())
-        self.dir = dir
+        self._dir = dir
         if name==None:
-            self.name = Expr._dirName(dir)
+            self._name = Expr._dirName(dir)
         else:
-            self.name = name
+            self._name = name
 
     def __str__(self):
-        return self.name
+        return self._name
 
     def __repr__(self):
-        return 'Coordinate[dir={}, name={}, shape={}]'.format(self.dir,
-            self.name, self.shape())
+        return 'Coordinate[dir={}, name={}, shape={}]'.format(self._dir,
+            self._name, self.shape())
 
     def _sameas(self, other):
-        return self.dir==other.dir and self.name==other.name
+        return self._dir==other._dir and self._name==other._name
+
+    def direction(self):
+        return self._dir
 
 
 #############################################################################

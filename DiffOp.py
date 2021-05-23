@@ -99,11 +99,11 @@ def Partial(f, coord):
 class _Partial(HungryDiffOp):
     def __init__(self, dir, name=None):
         super().__init__()
-        self.dir = dir
+        self._dir = dir
         if name==None:
-            self.myName = Expr._dirName(dir)
+            self._name = Expr._dirName(dir)
         else:
-            self.myName = name
+            self._name = name
 
     def acceptShape(self, input):
         return True
@@ -111,8 +111,11 @@ class _Partial(HungryDiffOp):
     def outputShape(self, input):
         return input
 
+    def direction(self):
+        return self._dir
+
     def __str__(self):
-        return 'd_d{}'.format(self.myName)
+        return 'd_d{}'.format(self._name)
 
 def Partial(f, coord):
     if isinstance(coord, int):
@@ -153,7 +156,10 @@ def Div(f):
 class _Gradient(HungryDiffOp):
     def __init__(self, dim):
         super().__init__()
-        self.dim()=dim
+        self._dim=dim
+
+    def dim(self):
+        return self._dim
 
     def acceptShape(self, input):
         return not isinstance(input, TensorShape)

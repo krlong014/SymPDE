@@ -3,14 +3,14 @@ from Expr import Expr, UnaryExpr, BinaryExpr, Coordinate
 from ExprShape import ScalarShape
 
 
-## Generic one-argument elementary function
+## Generic real-valued univariate function
 
-class ElemFuncExpr(UnaryExpr, ABC):
+class UnivariateFuncExpr(UnaryExpr, ABC):
     def __init__(self, name, arg):
         assert(Expr._convertibleToExpr(arg))
         expr = Expr._convertToExpr(arg)
         if not isinstance(expr.shape(), ScalarShape):
-            raise ValueError('ElemFuncExpr ctor: non-scalar arg [{}]'.format(expr))
+            raise ValueError('UnivariateFuncExpr ctor: non-scalar arg [{}]'.format(expr))
         super().__init__(expr, expr.shape())
         self._name = name
 
@@ -22,7 +22,7 @@ class ElemFuncExpr(UnaryExpr, ABC):
         return '{}[{}]'.format(self._name, self.arg())
 
     def __repr__(self):
-        return 'ElemFuncExpr[name={}, arg={}]'.format(self._name, self.arg())
+        return 'UnivariateFuncExpr[name={}, arg={}]'.format(self._name, self.arg())
 
     @abstractmethod
     def deriv(self, x):
@@ -55,7 +55,7 @@ def ArcTan2(y, x):
 ##############################################################################
 
 
-class ExpFunc(ElemFuncExpr):
+class ExpFunc(UnivariateFuncExpr):
     def __init__(self, x):
         super().__init__('Exp', x)
 
@@ -67,7 +67,7 @@ def Exp(x):
     return ExpFunc(x)
 
 
-class LogFunc(ElemFuncExpr):
+class LogFunc(UnivariateFuncExpr):
     def __init__(self, x):
         super().__init__('Log', x)
 
@@ -79,7 +79,7 @@ def Log(x):
     return LogFunc(x)
 
 
-class SqrtFunc(ElemFuncExpr):
+class SqrtFunc(UnivariateFuncExpr):
     def __init__(self, x):
         super().__init__('Sqrt', x)
 
@@ -91,7 +91,7 @@ def Sqrt(x):
     return SqrtFunc(x)
 
 
-class CosFunc(ElemFuncExpr):
+class CosFunc(UnivariateFuncExpr):
     def __init__(self, x):
         super().__init__('Cos', x)
 
@@ -103,7 +103,7 @@ def Cos(x):
     return CosFunc(x)
 
 
-class SinFunc(ElemFuncExpr):
+class SinFunc(UnivariateFuncExpr):
     def __init__(self, x):
         super().__init__('Sin', x)
 
@@ -115,7 +115,7 @@ def Sin(x):
     return SinFunc(x)
 
 
-class TanFunc(ElemFuncExpr):
+class TanFunc(UnivariateFuncExpr):
     def __init__(self, x):
         super().__init__('Tan', x)
 
@@ -127,7 +127,7 @@ def Tan(x):
     return TanFunc(x)
 
 
-class CoshFunc(ElemFuncExpr):
+class CoshFunc(UnivariateFuncExpr):
     def __init__(self, x):
         super().__init__('Cosh', x)
 
@@ -139,7 +139,7 @@ def Cosh(x):
     return CoshFunc(x)
 
 
-class SinhFunc(ElemFuncExpr):
+class SinhFunc(UnivariateFuncExpr):
     def __init__(self, x):
         super().__init__('Sinh', x)
 
@@ -151,7 +151,7 @@ def Sinh(x):
     return SinhFunc(x)
 
 
-class TanhFunc(ElemFuncExpr):
+class TanhFunc(UnivariateFuncExpr):
     def __init__(self, x):
         super().__init__('Tanh', x)
 
@@ -163,7 +163,7 @@ def Tanh(x):
     return TanhFunc(x)
 
 
-class ArcCosFunc(ElemFuncExpr):
+class ArcCosFunc(UnivariateFuncExpr):
     def __init__(self, x):
         super().__init__('ArcCos', x)
 
@@ -175,7 +175,7 @@ def ArcCos(x):
     return ArcCosFunc(x)
 
 
-class ArcSinFunc(ElemFuncExpr):
+class ArcSinFunc(UnivariateFuncExpr):
     def __init__(self, x):
         super().__init__('ArcSin', x)
 
@@ -187,7 +187,7 @@ def ArcSin(x):
     return ArcSinFunc(x)
 
 
-class ArcTanFunc(ElemFuncExpr):
+class ArcTanFunc(UnivariateFuncExpr):
     def __init__(self, x):
         super().__init__('ArcTan', x)
 
@@ -199,7 +199,7 @@ def ArcTan(x):
     return ArcTanFunc(x)
 
 
-class ArcCoshFunc(ElemFuncExpr):
+class ArcCoshFunc(UnivariateFuncExpr):
     def __init__(self, x):
         super().__init__('ArcCosh', x)
 
@@ -211,7 +211,7 @@ def ArcCosh(x):
     return ArcCoshFunc(x)
 
 
-class ArcSinhFunc(ElemFuncExpr):
+class ArcSinhFunc(UnivariateFuncExpr):
     def __init__(self, x):
         super().__init__('ArcSinh', x)
 
@@ -223,7 +223,7 @@ def ArcSinh(x):
     return ArcSinhFunc(x)
 
 
-class ArcTanhFunc(ElemFuncExpr):
+class ArcTanhFunc(UnivariateFuncExpr):
     def __init__(self, x):
         super().__init__('ArcTanh', x)
 

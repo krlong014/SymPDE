@@ -125,8 +125,12 @@ class ExprShape:
 
         raise RuntimeError('Impossible case in productShape()')
 
-    #def __ne__(self, other):
-        #return not (self==other)
+
+#############################################################################
+#
+# Shape subtypes
+#
+#############################################################################
 
 
 class AggShape(ExprShape):
@@ -134,14 +138,8 @@ class AggShape(ExprShape):
     def __init__(self):
         super().__init__(-1)
 
-    # def __eq__(self, other):
-    #     return isinstance(other, AggShape)
-
     def __str__(self):
         return "Agg"
-
-
-
 
 class ScalarShape(ExprShape):
     '''Class for Scalar expression shape'''

@@ -1,7 +1,7 @@
 
 
 template = """
-class %sFunc(ElemFuncExpr):
+class %sFunc(UnivariateFuncExpr):
     def __init__(self, x):
         super().__init__('%s', x)
 
