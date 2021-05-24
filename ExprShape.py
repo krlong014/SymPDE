@@ -36,9 +36,9 @@ class ExprShape:
                 'invalid left operand to mult compatibility test [{}]'.format(left)
                 )
 
-        if not isinstance(left, ExprShape):
+        if not isinstance(right, ExprShape):
             raise TypeError(
-                'invalid left operand to mult compatibility test [{}]'.format(left)
+                'invalid left operand to mult compatibility test [{}]'.format(right)
                 )
 
         return left.sameas(right)
@@ -55,9 +55,9 @@ class ExprShape:
                 'invalid left operand to mult compatibility test [{}]'.format(left)
                 )
 
-        if not isinstance(left, ExprShape):
+        if not isinstance(right, ExprShape):
             raise TypeError(
-                'invalid left operand to mult compatibility test [{}]'.format(left)
+                'invalid right operand to mult compatibility test [{}]'.format(right)
                 )
 
         # Anything times a scalar is defined

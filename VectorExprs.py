@@ -21,7 +21,7 @@ def Vector(*args):
             raise ValueError('Non-vector input [{}] to Vector()'.format(x))
         if len(x) <= 1:
             raise ValueError('1D input [{}] to Vector()'.format(x))
-        return ConstantVector(x)
+        return ConstantVectorExpr(x)
 
     # if the input is a 1D list or tuple:
     #   (*) Form a ConstantVectorExpr if all the elements are constants
@@ -99,6 +99,19 @@ class AggedVectorExpr(Expr, VectorExprInterface):
             if not me.sameas(you):
                 return False
         return True
+
+    def _lessThan(self, other):
+        if len(self) < len(other):
+            return True
+        if len(self) > len(other):
+            return False
+
+        for (mine, yours) in zip(self, other):
+            if mine.lessThan(yours):
+                return True
+            if yours.lessThan(mine):
+                return False
+        return False
 
 
 

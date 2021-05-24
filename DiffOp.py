@@ -2,7 +2,9 @@ from abc import ABC, abstractmethod
 from Expr import Expr, UnaryExpr, Coordinate, AggExpr
 from ExprShape import (ExprShape, ScalarShape, TensorShape, VectorShape)
 from VectorExprs import Vector
-from SymbolicFunction import SymbolicFunctionBase
+from FunctionWithBasis import FunctionWithBasis
+from BasisBase import ScalarBasisBase, VectorBasisBase
+from FunctionWithBasis import TestFunction, FunctionWithBasis
 import pytest
 
 class DiffOp(UnaryExpr):
@@ -15,22 +17,35 @@ class DiffOp(UnaryExpr):
             raise ValueError('Undefined DiffOp action: {} acting on {}'.format(op, arg))
 
         super().__init__(arg, myShape)
-        self.op = op
+        self._op = op
+
+    def op(self):
+        return self._op
 
 
     def __str__(self):
-        return '{}({})'.format(self.op.__str__(), self.arg.__str__())
+        return '{}({})'.format(self.op().__str__(), self.arg().__str__())
 
 
 
 class DiffOpOnFunction(DiffOp):
 
     def __init__(self, op, arg):
-        assert(isinstance(arg, SymbolicFunctionBase))
-        super().init(op, arg)
+        assert(isinstance(arg, FunctionWithBasis))
+        super().__init__(op, arg)
 
     def funcID(self):
         return self.arg().funcID()
+
+    def isTest(self):
+        return self.arg().isTest()
+
+    def isUnknown(self):
+        return self.arg().isUnknown()
+
+    def isDiscrete(self):
+        return self.arg().isDiscrete()
+
 
 
 class HungryDiffOp(ABC):
@@ -65,7 +80,7 @@ class HungryDiffOp(ABC):
 
 
         # Form the diff op expression
-        if isinstance(f, SymbolicFunctionBase):
+        if isinstance(f, FunctionWithBasis):
             return DiffOpOnFunction(self, f)
         return DiffOp(self, f)
 
@@ -121,7 +136,7 @@ def Partial(f, coord):
     if isinstance(coord, int):
         op = _Partial(coord)
     elif isinstance(coord, Coordinate):
-        op = _Partial(coord.dir)
+        op = _Partial(coord.direction())
     else:
         raise ValueError('unable to interpret direction {} in Partial()'.format(coord))
 
@@ -173,6 +188,12 @@ class _Gradient(HungryDiffOp):
 
     def __str__(self):
         return 'Grad'
+
+
+def Gradient(f, dim=3):
+    grad = _Gradient(dim)
+    return grad(f)
+
 
 class _Curl(HungryDiffOp):
     def __init__(self):
@@ -253,8 +274,8 @@ class TestDiffOpSanity:
         F = Vector(x,y)
         divF = Div(F)
 
-        print('Div(F)=', divF)
-        assert(divF.sameas(DiffOp(div, F)) and divF.shape()==ScalarShape())
+        print('Div(F)={}, shape={}'.format(divF, divF.shape()))
+        assert(divF.sameas(DiffOp(div, F)) and divF.shape().sameas(ScalarShape()))
 
 
     def test_Curl(self):
@@ -281,8 +302,45 @@ class TestDiffOpSanity:
         rotF = rot(F)
 
         print('Rot(F)=', rotF)
-        assert(rotF.sameas(DiffOp(rot, F)) and rotF.shape()==ScalarShape())
+        assert(rotF.sameas(DiffOp(rot, F)) and rotF.shape().sameas(ScalarShape()))
 
+
+class TestDiffOpOnFunction:
+
+    def test_DiffOpOnTest1(self):
+
+        basis = ScalarBasisBase(1)
+        v = TestFunction(basis, 'v')
+        dv_dx = Partial(v, 0)
+
+        assert(dv_dx.isTest())
+
+
+    def test_DivOnTest(self):
+
+        basis = VectorBasisBase(1, VectorShape(2))
+        V = TestFunction(basis, 'v')
+        divV = Div(V)
+
+        assert(divV.isTest())
+
+
+    def test_CurlOnTest(self):
+
+        basis = VectorBasisBase(1, VectorShape(3))
+        V = TestFunction(basis, 'v')
+        curlV = Curl(V)
+
+        assert(curlV.isTest())
+
+
+    def test_RotOnTest(self):
+
+        basis = VectorBasisBase(1, VectorShape(2))
+        V = TestFunction(basis, 'v')
+        rotV = Rot(V)
+
+        assert(rotV.isTest())
 
 
 class TestDiffOpExpectedErrors:

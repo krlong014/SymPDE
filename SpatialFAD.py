@@ -1,8 +1,14 @@
 from ExprShape import ScalarShape, VectorShape, TensorShape
 from Expr import (Expr, UnaryMinus, SumExpr, ProductExpr, CrossProductExpr,
-                    QuotientExpr, PowerExpr, Coordinate, AggExpr)
-from DiffOp import (DiffOp, HungryDiffOp, Partial, _Partial,
+                    QuotientExpr, PowerExpr, Coordinate, AggExpr,
+                    VectorExprInterface)
+from DiffOp import (DiffOp, HungryDiffOp, Partial, _Partial, _IdentityOp,
     _Div, Div, _Gradient, Gradient, _Curl, Curl, _Rot, Rot)
+from UnivariateFunc import (UnivariateFuncExpr,
+    Exp, Log, Sqrt, Cos, Sin, Tan, Cosh, Sinh, Tanh,
+    ArcCos, ArcSin, ArcTan, ArcCosh, ArcSinh, ArcTanh, ArcTan2)
+from VectorExprs import Vector
+from SimpleEvaluator import compareExprs
 
 class SpatialFADException(Exception):
     def __init__(self, descr, op, *args):
@@ -30,24 +36,40 @@ class SpatialFADException(Exception):
 
 
 
-def spatialFAD(expr, op):
+def spatialFAD(expr, op=_IdentityOp()):
 
     # Make sure arguments are valid
     assert(isinstance(expr, Expr) and isinstance(op, HungryDiffOp))
     assert(not isinstance(expr, AggExpr))
 
+
+
+    # If identity op, simply evaluate the expr
+    if isinstance(expr, DiffOp):
+        return spatialFAD(expr.arg(), expr.op())
+
+    if isinstance(op, _IdentityOp):
+        return expr
+
     if expr.isSpatialConstant():
         if expr.isScalar():
+            if isinstance(op, _Gradient):
+                return Vector([0,]*op.dim())
+            if isinstance(op, (_Curl, _Div, _Rot)):
+                raise SpatialFADException('Vector operator applied to scalar',
+                    op, expr)
             return 0
         if expr.isVector():
+            if isinstance(op, _Div, _Rot):
+                return 0
             return Vector([0,]*expr.shape().dim())
         raise SpatialFADException('tensor ops not yet implemented', op)
 
     if isinstance(expr, SumExpr):
-        return spatialDiff(expr.L, op) + spatialDiff(expr.R, op)
+        return spatialFAD(expr.left(), op) + expr.sign*spatialFAD(expr.right(), op)
 
     if isinstance(expr, UnaryMinus):
-        return -spatialDiff(expr, op)
+        return -spatialFAD(expr.arg(), op)
 
     if isinstance(expr, ProductExpr):
         return differentiateProduct(expr, op)
@@ -61,14 +83,17 @@ def spatialFAD(expr, op):
     if isinstance(expr, QuotientExpr):
         return differentiateQuotient(expr, op)
 
-    if isinstance(expr, CoordinateExpr):
+    if isinstance(expr, Coordinate):
         return differentiateCoordinate(expr, op)
 
-    if isinstance(expr, VectorExprInterface):
-        return differentiateVector(expr, op)
+    # if isinstance(expr, VectorExprInterface):
+    #     return differentiateVector(expr, op)
 
     if isinstance(expr, UnivariateFuncExpr):
         return differentiateUnivariateFunc(expr, op)
+
+    if isinstance(expr, DiffOp):
+        return spatialFAD(expr.arg(), expr.op())
 
     raise SpatialFADException('no rule to differentiate', op, expr)
 
@@ -181,7 +206,7 @@ def differentiatePower(expr, op):
     assert(b.isScalar())
     assert(e.isScalar())
 
-    return b**(e-1)*spatialFAD(b,op) + Log(b)*expr*spatialFAD(e, op)
+    return e*b**(e-1)*spatialFAD(b,op) + Log(b)*expr*spatialFAD(e, op)
 
 
 def differentiateVector(expr, op):
@@ -201,3 +226,190 @@ def differentiateUnivariateFunc(expr, op):
     f = expr
     u = expr.arg()
     return f.deriv(u) * spatialFAD(u, op)
+
+
+if __name__=='__main__':
+
+    x = Coordinate(0)
+    y = Coordinate(1)
+    z = Coordinate(2)
+
+    f = x*x*x
+
+    df = spatialFAD(Partial(f,x))
+    print('df=', df)
+
+
+class TestDeriv1D:
+
+    def test_DiffConstant(self):
+        x = Coordinate(0)
+        varMap = { x:1.5 }
+        f = 4.0
+        df0 = 0.0
+        df = spatialFAD(Partial(f, x))
+
+        assert(compareExprs(df, df0, varMap))
+
+
+    def test_DiffCoord(self):
+        x = Coordinate(0)
+        varMap = { x:1.5 }
+        f = x
+        df0 = 1.0
+        df = spatialFAD(Partial(f, x))
+        print('df={}'.format(df))
+
+        assert(compareExprs(df, df0, varMap))
+
+
+    def test_DiffPower1(self):
+        x = Coordinate(0)
+        varMap = { x:1.5 }
+        f = x**3
+        df0 = 3*x**2
+        df = spatialFAD(Partial(f, x))
+        print('df={}'.format(df))
+
+        assert(compareExprs(df, df0, varMap))
+
+
+    def test_DiffPower2(self):
+        x = Coordinate(0)
+        varMap = { x:1.5 }
+        f = x*(x**2)
+        df0 = 3*x**2
+        df = spatialFAD(Partial(f, x))
+        print('df={}'.format(df))
+
+        assert(compareExprs(df, df0, varMap))
+
+
+    def test_DiffPower3(self):
+        x = Coordinate(0)
+        varMap = { x:1.5 }
+        f = x*x*x
+        df0 = 3*x**2
+        df = spatialFAD(Partial(f, x))
+        print('df={}'.format(df))
+
+        assert(compareExprs(df, df0, varMap))
+
+
+    def test_DiffPower4(self):
+        x = Coordinate(0)
+        varMap = { x:1.5 }
+        f = 2**x
+        df0 = f*Log(2)
+        df = spatialFAD(Partial(f, x))
+        print('df={}'.format(df))
+
+        assert(compareExprs(df, df0, varMap))
+
+
+    def test_DiffPower5(self):
+        x = Coordinate(0)
+        varMap = { x:1.5 }
+        f = x**x
+        df0 = f*(1+Log(x))
+        df = spatialFAD(Partial(f, x))
+        print('df={}'.format(df))
+
+        assert(compareExprs(df, df0, varMap))
+
+
+    def test_DiffSum1(self):
+        x = Coordinate(0)
+        varMap = { x:1.5 }
+        f = 1+5*x
+        df0 = 5
+        df = spatialFAD(Partial(f, x))
+        print('df={}'.format(df))
+
+        assert(compareExprs(df, df0, varMap))
+
+    def test_DiffSum2(self):
+        x = Coordinate(0)
+        varMap = { x:1.5 }
+        f = 1-5*x
+        df0 = -5
+        df = spatialFAD(Partial(f, x))
+        print('df={}'.format(df))
+
+        assert(compareExprs(df, df0, varMap))
+
+    def test_DiffPoly1(self):
+        x = Coordinate(0)
+        varMap = { x:1.5 }
+        f = 4.0 - 2.0*x + 3.0*x**2
+        df0 = -2.0 + 6.0*x
+        df = spatialFAD(Partial(f, x))
+        print('df={}'.format(df))
+
+        assert(compareExprs(df, df0, varMap))
+
+    def test_DiffPoly2(self):
+        x = Coordinate(0)
+        varMap = { x:1.5 }
+        q = 4.0 - 2.0*x + 3.0*x**2
+        f = q*q
+        df0 = 2*(-2.0 + 6.0*x)*q
+        df = spatialFAD(Partial(f, x))
+        print('df={}'.format(df))
+
+        assert(compareExprs(df, df0, varMap))
+
+    def test_DiffPoly3(self):
+        x = Coordinate(0)
+        varMap = { x:1.5 }
+        q = 4.0 - 2.0*x + 3.0*x**2
+        f = q**3
+        df0 = 3*(-2.0 + 6.0*x)*q**2
+        df = spatialFAD(Partial(f, x))
+        print('df={}'.format(df))
+
+        assert(compareExprs(df, df0, varMap))
+
+    def test_DiffQuotient1(self):
+        x = Coordinate(0)
+        varMap = { x:1.5 }
+
+        f = 1/(1+x)
+        df0 = -1/(1+x)**2
+        df = spatialFAD(Partial(f, x))
+        print('df={}'.format(df))
+
+        assert(compareExprs(df, df0, varMap))
+
+    def test_DiffQuotient2(self):
+        x = Coordinate(0)
+        varMap = { x:1.5 }
+
+        f = x/(1+x)
+        df0 = 1/(1+x)**2
+        df = spatialFAD(Partial(f, x))
+        print('df={}'.format(df))
+
+        assert(compareExprs(df, df0, varMap))
+
+    def test_DiffQuotient3(self):
+        x = Coordinate(0)
+        varMap = { x:1.5 }
+
+        f = 1/(1+x**2)
+        df0 = -2*x/(1+x**2)**2
+        df = spatialFAD(Partial(f, x))
+        print('df={}'.format(df))
+
+        assert(compareExprs(df, df0, varMap))
+
+    def test_DiffQuotient4(self):
+        x = Coordinate(0)
+        varMap = { x:1.5 }
+
+        f = x/(1+x**2)
+        df0 = (1-x**2)/(1+x**2)**2
+        df = spatialFAD(Partial(f, x))
+        print('df={}'.format(df))
+
+        assert(compareExprs(df, df0, varMap))

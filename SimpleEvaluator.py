@@ -222,3 +222,13 @@ def compareEval(varNames, varVals, exprString, constNames={}, constVals={}):
     raw = evalRaw(varNames, varVals, exprString, constNames, constVals)
 
     return (ex, raw)
+
+
+def compareExprs(f, g, varMap, tol=1.0e-13):
+    fEval = makeEval(Expr._convertToExpr(f))
+    gEval = makeEval(Expr._convertToExpr(g))
+
+    fVal = fEval.eval(varMap)
+    gVal = gEval.eval(varMap)
+
+    return np.abs(fVal-gVal) < tol*(1 + 0.5*(np.abs(fVal) + np.abs(gVal)))

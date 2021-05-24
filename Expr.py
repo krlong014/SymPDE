@@ -8,6 +8,10 @@ from numbers import Number
 from numpy.linalg import norm
 from numpy import dot, array_equiv, inf, ndarray
 import copy
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 class Expr(ABC):
     '''Expr is the base class for symbolic expressions.'''
@@ -143,6 +147,8 @@ class Expr(ABC):
         left = Expr._convertToExpr(leftIn)
         right = Expr._convertToExpr(rightIn)
 
+        logger.debug('_addOrSubtract: L=[{}], R=[{}], sign={}'.format(left, right, sign))
+
         # Check for compatibility
         ExprShape.assertAdditiveCompatibility(Expr._getShape(left),
             Expr._getShape(right))
@@ -159,6 +165,13 @@ class Expr(ABC):
             return left.plusConstant(right, sign)
 
         # ----- Default case: expr plus/minus expr
+        if sign>0:
+            if left.lessThan(right):
+                return SumExpr(left, right, sign)
+            if right.lessThan(left):
+                return SumExpr(right, left, sign)
+            if (not right.lessThan(left)) and (not left.lessThan(right)):
+                return 2*left
         return SumExpr(left, right, sign)
 
 
@@ -168,13 +181,19 @@ class Expr(ABC):
         left = Expr._convertToExpr(leftIn)
         right = Expr._convertToExpr(rightIn)
 
+        logger.debug('_multiply: L=[{}], R=[{}]'.format(left, right))
+
         # Check for compatibility
         ExprShape.assertMultiplicativeCompatibility(Expr._getShape(left),
             Expr._getShape(right))
 
         # Zero times anything is zero
         if Expr._isZero(left) or Expr._isZero(right):
-            return 0
+            outShape = ExprShape.productShape(left.shape(), right.shape())
+            if isinstance(outShape, ScalarShape):
+                return 0
+            elif isinstance(outShape, VectorShape):
+                return ConstantVectorExpr([0,]*outShape.dim())
 
         # Multiplying by the identity does nothing
         if Expr._isIdentity(right):
@@ -186,12 +205,20 @@ class Expr(ABC):
         if left.isConstant() and right.isConstant():
             return left.timesConstant(right)
 
-        # Expr times expr
-        if (isinstance(left.shape(), ScalarShape)
-                or isinstance(right.shape(), ScalarShape)):
+
+        # expr times scalar or scalar times expr
+        if (left.isScalar() or right.isScalar()):
+            if right.isConstant() or right.lessThan(left):
+                left,right = right,left
             return ProductExpr(left, right)
 
-        return DotProductExpr(left, right)
+        # vector dot vector
+        if (left.isVector() and right.isVector()):
+            if (right.isConstant() or right.lessThan(left)):
+                left,right = right,left
+            return DotProductExpr(left, right)
+
+        return NotImplementedError('Tensor-Vector multiplication not ready')
 
 
     def _divide(leftIn, rightIn):
@@ -281,6 +308,24 @@ class Expr(ABC):
 
 
     # =========================================================================
+    # Comparison for ordering exprs
+    # =========================================================================
+
+    def typeLessThan(self, other):
+        return type(self).__name__ < type(other).__name__
+
+    def lessThan(self, other):
+        if self.typeLessThan(other):
+            return True
+        if other.typeLessThan(self):
+            return False
+        return self._lessThan(other)
+
+    @abstractmethod
+    def _lessThan(self, other):
+        pass
+
+    # =========================================================================
     # Miscellaneous internal maintenance functions.
     # =========================================================================
 
@@ -302,10 +347,12 @@ class Expr(ABC):
         '''Determine whether an argument is identically zero. '''
         if isinstance(x, Number) and x==0:
             return True
-        elif not x.isConstant():
+        if not x.isConstant():
             return False
-        return x._isZero()
-        raise ValueError('Expr._isZero() got bad arg [{}]'.format(x))
+        if isinstance(x, ConstantExprBase):
+            return ConstantExprBase._isZero(x)
+        return False
+
 
     def _isIdentity(x):
         '''Determine whether an argument is a multiplicative identity. '''
@@ -391,6 +438,19 @@ class ExprWithChildren(Expr):
                 return False
         return True
 
+    def _lessThan(self, other):
+        if len(self._children) < len(other._children):
+            return True
+        if len(self._children) > len(other._children):
+            return False
+
+        for mine, yours in zip(self._children, other._children):
+            if mine.lessThan(yours):
+                return True
+            if yours.lessThan(mine):
+                return False
+        return False
+
     def isSpatialConstant(self):
         for c in self._children:
             if not c.isSpatialConstant():
@@ -457,6 +517,13 @@ class SumExpr(BinaryExpr):
     def _sameas(self, other):
         return (self.left().sameas(other.left()) and self.right().sameas(other.right())
             and self.sign==other.sign)
+
+    def _lessThan(self, other):
+        if self.sign < other.sign:
+            return True
+        if self.sign > other.sign:
+            return False
+        return super()._lessThan(other)
 
     def __str__(self):
         return super().toString(self.op)
@@ -575,6 +642,8 @@ class ConstantExprBase(Expr, ABC):
         return array_equiv(self._data, other._data)
 
     def _isZero(self):
+        if isinstance(self.shape(), ScalarShape):
+            return self._data == 0.0
         return norm(self._data, ord=inf)==0.0
 
 
@@ -585,6 +654,9 @@ class ConstantScalarExpr(ConstantExprBase):
 
     def typename(self):
         return "ConstantScalar"
+
+    def _lessThan(self, other):
+        return self.data() < other.data()
 
     def timesConstant(self, other):
         assert(isinstance(other, ConstantExprBase))
@@ -606,7 +678,6 @@ class VectorExprInterface(ABC):
     @abstractmethod
     def __getitem__(self, i):
         pass
-
 
 
 class VectorExprIterator:
@@ -634,10 +705,10 @@ class VectorElementInterface:
         self._index = index
 
     def parent(self):
-        return _parent
+        return self._parent
 
     def index(self):
-        return _index
+        return self._index
 
     def __str__(self):
         return '{}[{}]'.format(self.parent(), self.index())
@@ -671,6 +742,18 @@ class ConstantVectorExpr(ConstantExprBase, VectorExprInterface):
     def __len__(self):
         return self.shape().dim()
 
+    def _lessThan(self, other):
+        if len(self) < len(other):
+            return True
+        if len(self) > len(other):
+            return False
+        for (mine, yours) in zip(self.data(), other.data()):
+            if mine<yours:
+                return True
+            if yours<mine:
+                return False
+        return False
+
 
 
 
@@ -701,6 +784,9 @@ class Coordinate(Expr):
 
     def _sameas(self, other):
         return self._dir==other._dir and self._name==other._name
+
+    def _lessThan(self, other):
+        return self._dir < other._dir
 
     def direction(self):
         return self._dir
@@ -749,6 +835,20 @@ class AggExpr(Expr):
             if not me.sameas(you):
                 return False
         return True
+
+    def _lessThan(self, other):
+        if len(self) < len(other):
+            return True
+        if len(self) > len(other):
+            return False
+
+        for (mine, yours) in zip(self, other):
+            if mine.lessThan(yours):
+                return True
+            if yours.lessThan(mine):
+                return False
+        return False
+
 
 
 
