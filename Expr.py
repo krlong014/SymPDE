@@ -496,9 +496,13 @@ class BinaryExpr(ExprWithChildren):
     def right(self):
         return self.child(1)
 
-    def toString(self, op):
+    @abstractmethod
+    def opString(self):
+        pass
+
+    def __str__(self):
         return '{}{}{}'.format(Expr._maybeParenthesize(self.left()),
-            op, Expr._maybeParenthesize(self.right()))
+            self.opString(), Expr._maybeParenthesize(self.right()))
 
     def isSpatialConstant(self):
         return self.left().isSpatialConstant() and self.right().isSpatialConstant()
@@ -507,12 +511,12 @@ class SumExpr(BinaryExpr):
     def __init__(self, L, R, sign):
         super().__init__(L, R, Expr._getShape(L))
         self.sign = sign
-        if sign==1:
-            self.op=' + '
-        elif sign==-1:
-            self.op=' - '
+
+    def opString(self):
+        if self.sign > 0:
+            return '+'
         else:
-            raise ValueError('SumExpr: Nonsense sign argument {}'.format(sign))
+            return '-'
 
     def _sameas(self, other):
         return (self.left().sameas(other.left()) and self.right().sameas(other.right())
@@ -525,9 +529,6 @@ class SumExpr(BinaryExpr):
             return False
         return super()._lessThan(other)
 
-    def __str__(self):
-        return super().toString(self.op)
-
     def __repr__(self):
         return 'SumExpr[left={}, right={}, shape={}]'.format(self.left().__repr__(),
             self.right().__repr__(), self.shape())
@@ -537,8 +538,8 @@ class ProductExpr(BinaryExpr):
     def __init__(self, L, R):
         super().__init__(L, R, ScalarShape())
 
-    def __str__(self):
-        return super().toString('*')
+    def opString(self):
+        return '*'
 
     def __repr__(self):
         return 'ProductExpr[left={}, right={}]'.format(self.left().__repr__(),
@@ -556,6 +557,9 @@ def Dot(a, b):
 class DotProductExpr(BinaryExpr):
     def __init__(self, L, R):
         super().__init__(L, R, ExprShape.productShape(L.shape(), R.shape()))
+
+    def opString(self):
+        return 'dot'
 
     def __str__(self):
         return 'dot({},{})'.format(self.left(), self.right())
@@ -575,6 +579,9 @@ class CrossProductExpr(BinaryExpr):
     def __init__(self, L, R, shape):
         pass
 
+    def opString(self):
+        return 'cross'
+
     def __str__(self):
         return 'cross({},{})'.format(self.L, self.R)
 
@@ -582,8 +589,8 @@ class QuotientExpr(BinaryExpr):
     def __init__(self, L, R):
         super().__init__(L, R, L.shape())
 
-    def __str__(self):
-        return super().toString('/')
+    def opString(self):
+        return '/'
 
 
 
@@ -591,8 +598,11 @@ class PowerExpr(BinaryExpr):
     def __init__(self, L, R):
         super().__init__(L, R, ScalarShape())
 
+    def opString(self):
+        return 'power'
+
     def __str__(self):
-        return super().toString('**')
+        return 'pow({},{})'.format(self.left(), self.right)
 
 
 
