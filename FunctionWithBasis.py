@@ -39,6 +39,14 @@ class FunctionWithBasis(Expr):
         return self._funcID < other._funcID
 
 
+
+class FunctionWithScalarBasis(FunctionWithBasis):
+
+    def __init__(self, basis, name):
+
+        assert(isinstance(basis.shape(), ScalarShape))
+        super().__init__(basis, name)
+
 class FunctionWithVectorBasis(FunctionWithBasis, VectorExprInterface):
 
     def __init__(self, basis, name, myType):
@@ -97,9 +105,8 @@ class VectorFunctionElement(Expr, VectorElementInterface):
 # Test function
 # -----------------------------------------------------------------------------
 
-class ScalarTestFunction(FunctionWithBasis):
+class ScalarTestFunction(FunctionWithScalarBasis):
     def __init__(self, basis, name):
-        assert(isinstance(basis, ScalarBasisBase))
         super().__init__(basis, name)
 
     def isTest(self):
@@ -108,7 +115,6 @@ class ScalarTestFunction(FunctionWithBasis):
 
 class VectorTestFunction(FunctionWithVectorBasis):
     def __init__(self, basis, name):
-        assert(isinstance(basis, VectorBasisBase))
         super().__init__(basis, name, 'Test')
 
     def isTest(self):
@@ -139,9 +145,8 @@ def TestFunction(basis, name):
 # -----------------------------------------------------------------------------
 
 
-class ScalarUnknownFunction(FunctionWithBasis):
+class ScalarUnknownFunction(FunctionWithScalarBasis):
     def __init__(self, basis, name):
-        assert(isinstance(basis, ScalarBasisBase))
         super().__init__(basis, name)
 
     def isUnknown(self):
@@ -150,7 +155,6 @@ class ScalarUnknownFunction(FunctionWithBasis):
 
 class VectorUnknownFunction(FunctionWithVectorBasis):
     def __init__(self, basis, name):
-        assert(isinstance(basis, VectorBasisBase))
         super().__init__(basis, name, 'Unknown')
 
     def isUnknown(self):
@@ -158,7 +162,6 @@ class VectorUnknownFunction(FunctionWithVectorBasis):
 
 
 class UnknownFunctionElement(VectorFunctionElement):
-
     def __init__(self, parent, myIndex):
         super().__init__(parent, myIndex)
 
@@ -182,9 +185,8 @@ def UnknownFunction(basis, name):
 # -----------------------------------------------------------------------------
 
 
-class ScalarDiscreteFunction(FunctionWithBasis):
+class ScalarDiscreteFunction(FunctionWithScalarBasis):
     def __init__(self, basis, name):
-        assert(isinstance(basis, ScalarBasisBase))
         super().__init__(basis, name)
 
     def isDiscrete(self):
