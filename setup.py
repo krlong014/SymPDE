@@ -8,7 +8,7 @@ setuptools.setup(
     description="PDEs",
     long_description="Symbolic description of PDEs",
     long_description_content_type="text/markdown",
-    url="https://github.com/krlong014/PyNonlin",
+    url="https://github.com/krlong014/SymPDE",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
