@@ -188,6 +188,13 @@ def UnknownFunction(basis, name):
 class ScalarDiscreteFunction(FunctionWithScalarBasis):
     def __init__(self, basis, name):
         super().__init__(basis, name)
+        self._vector = None
+
+    def setVector(self, vec):
+        self._vector = vec
+
+    def get Vector(self):
+        return self._vector
 
     def isDiscrete(self):
         return True
