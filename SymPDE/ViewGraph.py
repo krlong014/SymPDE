@@ -1,12 +1,12 @@
 from graphviz import Digraph
-from Expr import (BinaryExpr, Coordinate, UnaryMinus, ConstantExprBase)
-from DiffOp import DiffOp, DiffOpOnFunction, Partial
+from . Expr import (BinaryExpr, Coordinate, UnaryMinus, ConstantExprBase)
+from . DiffOp import DiffOp, DiffOpOnFunction, Partial
 import numpy.random as npr
-from UnivariateFunc import (UnivariateFuncExpr, Exp, Sqrt, Log, Cos, Sin, Tan,
+from . UnivariateFunc import (UnivariateFuncExpr, Exp, Sqrt, Log, Cos, Sin, Tan,
                 Cosh, Sinh, Tanh, ArcCos, ArcSin, ArcTan,
                 ArcCosh, ArcSinh, ArcTanh)
-from FunctionWithBasis import UnknownFunction, TestFunction, FunctionWithBasis
-from BasisBase import ScalarBasisBase
+from . FunctionWithBasis import UnknownFunction, TestFunction, FunctionWithBasis
+from . BasisBase import ScalarBasisBase
 
 def vizExpr(expr, filename):
 

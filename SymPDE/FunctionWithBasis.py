@@ -1,8 +1,13 @@
-from Expr import Expr, VectorExprInterface, VectorElementInterface
-from ExprShape import (ExprShape, ScalarShape, TensorShape,
+from . Expr import Expr
+from . IndexableExpr import (
+        IndexableExprIterator,
+        IndexableExprInterface,
+        IndexableExprElementInterface
+    )
+from . ExprShape import (ExprShape, ScalarShape, TensorShape,
         VectorShape, AggShape)
-from BasisBase import BasisBase, VectorBasisBase, ScalarBasisBase
-from DiscreteSpaceBase import DiscreteSpaceBase
+from . BasisBase import BasisBase, VectorBasisBase, ScalarBasisBase
+from . DiscreteSpaceBase import DiscreteSpaceBase
 
 import pytest
 
@@ -47,7 +52,7 @@ class FunctionWithScalarBasis(FunctionWithBasis):
         assert(isinstance(basis.shape(), ScalarShape))
         super().__init__(basis, name)
 
-class FunctionWithVectorBasis(FunctionWithBasis, VectorExprInterface):
+class FunctionWithVectorBasis(FunctionWithBasis, IndexableExprInterface):
 
     def __init__(self, basis, name, myType):
 
@@ -71,12 +76,22 @@ class FunctionWithVectorBasis(FunctionWithBasis, VectorExprInterface):
     def __getitem__(self, i):
         return self._elems[i]
 
+    def __iter__(self):
+        return VectorFunctionIterator(self)
 
-class VectorFunctionElement(Expr, VectorElementInterface):
 
-    def __init__(self, parent, myIndex):
+class VectorFunctionIterator(IndexableExprIterator):
+    '''Iterator for elements of vector-valued function.'''
+    def __init__(self, subtype, parent):
+        '''Constructor'''
+        super().__init__(subtype, parent)
+
+
+class VectorFunctionElement(Expr, IndexableExprElementInterface):
+
+    def __init__(self, subtype, parent, myIndex):
         super().__init__(ScalarShape())
-        super(Expr, self).__init__(parent, myIndex)
+        super(Expr, self).__init__(subtype, parent, myIndex)
 
 
     def _sameas(self, other):
@@ -125,7 +140,7 @@ class TestFunctionElement(VectorFunctionElement):
     # Need to keep pytest from thinking this is a class of unit tests
     __test__=False
     def __init__(self, parent, myIndex):
-        super().__init__(parent, myIndex)
+        super().__init__(VectorTestFunction, parent, myIndex)
 
     def isTest(self):
         return True
@@ -163,7 +178,7 @@ class VectorUnknownFunction(FunctionWithVectorBasis):
 
 class UnknownFunctionElement(VectorFunctionElement):
     def __init__(self, parent, myIndex):
-        super().__init__(parent, myIndex)
+        super().__init__(VectorUnknownFunction, parent, myIndex)
 
     def isUnknown(self):
         return True
@@ -193,7 +208,7 @@ class ScalarDiscreteFunction(FunctionWithScalarBasis):
     def setVector(self, vec):
         self._vector = vec
 
-    def get Vector(self):
+    def getVector(self):
         return self._vector
 
     def isDiscrete(self):
@@ -212,7 +227,7 @@ class VectorDiscreteFunction(FunctionWithVectorBasis):
 class DiscreteFunctionElement(VectorFunctionElement):
 
     def __init__(self, parent, myIndex):
-        super().__init__(parent, myIndex)
+        super().__init__(VectorDiscreteFunction, parent, myIndex)
 
     def isDiscrete(self):
         return True
@@ -249,71 +264,3 @@ if __name__=='__main__':
     v1 = V[1]
     print('v0.isTest()=', v0.isTest())
     print('v1.isTest()=', v1.isTest())
-
-
-
-class TestFunctionIdentification:
-
-    def test_TestFunc(self):
-        v = TestFunction(ScalarBasisBase(0), 'v')
-        V = TestFunction(VectorBasisBase(0,VectorShape(2)), 'V')
-
-        v0 = V[0]
-        v1 = V[1]
-
-        vIsTest = v.isTest()
-        VIsTest = V.isTest()
-        v0IsTest = v0.isTest()
-        v1IsTest = v1.isTest()
-
-        vIsNotUnknown = not v.isUnknown()
-        VIsNotUnknown = not V.isUnknown()
-        v0IsNotUnknown = not v0.isUnknown()
-        v1IsNotUnknown = not v1.isUnknown()
-
-        v0IndexIsZero = v0.index()==0
-        v1IndexIsOne = v1.index()==1
-
-        assert(vIsTest and VIsTest and v0IsTest and v1IsTest
-            and vIsNotUnknown and VIsNotUnknown
-            and v0IsNotUnknown and v1IsNotUnknown
-            and v0IndexIsZero and v1IndexIsOne)
-
-    def test_UnknownFunc(self):
-        v = UnknownFunction(ScalarBasisBase(0), 'v')
-        V = UnknownFunction(VectorBasisBase(0,VectorShape(2)), 'V')
-
-        v0 = V[0]
-        v1 = V[1]
-
-        vIsUnknown = v.isUnknown()
-        VIsUnknown = V.isUnknown()
-        v0IsUnknown = v0.isUnknown()
-        v1IsUnknown = v1.isUnknown()
-
-        vIsNotTest = not v.isTest()
-        VIsNotTest = not V.isTest()
-        v0IsNotTest = not v0.isTest()
-        v1IsNotTest = not v1.isTest()
-
-        v0IndexIsZero = v0.index()==0
-        v1IndexIsOne = v1.index()==1
-
-        assert(vIsUnknown and VIsUnknown and v0IsUnknown and v1IsUnknown
-            and vIsNotTest and VIsNotTest
-            and v0IsNotTest and v1IsNotTest
-            and v0IndexIsZero and v1IndexIsOne)
-
-    def test_DiscreteFunc(self):
-        v = DiscreteFunction(DiscreteSpaceBase(ScalarBasisBase(0)), 'v')
-        V = DiscreteFunction(DiscreteSpaceBase(VectorBasisBase(0,VectorShape(2))), 'V')
-
-        v0 = V[0]
-        v1 = V[1]
-
-        vIsDiscrete = v.isDiscrete()
-        VIsDiscrete = V.isDiscrete()
-        v0IsDiscrete = v0.isDiscrete()
-        v1IsDiscrete = v1.isDiscrete()
-
-        assert(vIsDiscrete and VIsDiscrete and v0IsDiscrete and v1IsDiscrete)

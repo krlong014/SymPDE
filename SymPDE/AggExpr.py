@@ -1,22 +1,24 @@
-
 #############################################################################
 #
 # Class for aggregate expressions
 #
 #############################################################################
 
-import Expr
-from IndexableExpr import (
+from . Expr import Expr
+from . ExprShape import AggShape
+from . IndexableExpr import (
         IndexableExprIterator,
         IndexableExprInterface,
         IndexableExprElementInterface
     )
+from numbers import Number
+from numpy import ndarray
 
 
-class AggExpr(IndexableExprInterface):
+
+class AggExpr(IndexableExprInterface, Expr):
 
     def __init__(self, *args):
-        super().__init__(AggShape())
 
         if len(args)==1:
             input = args[0]
@@ -28,9 +30,9 @@ class AggExpr(IndexableExprInterface):
             raise ValueError('input [{}] not convertible to AggExpr'.format(input))
 
         if isinstance(input, AggExpr):
-            self.data = input.data
+            self._elems = input._elems
         elif isinstance(input, (list, tuple)):
-            self.data = []
+            self._elems = []
             for i,e in enumerate(input):
                 if isinstance(e, AggExpr):
                     raise ValueError('Agg within list detected in entry \
@@ -38,9 +40,12 @@ class AggExpr(IndexableExprInterface):
                 if not Expr._convertibleToExpr(e):
                     raise ValueError('Agg entry #{}=[] not convertible \
                     to Expr'.format(i,e))
-                self.data.append(Expr._convertToExpr(e))
+                self._elems.append(Expr._convertToExpr(e))
         else:
-            self.data = [Expr._convertToExpr(input),]
+            self._elems = [Expr._convertToExpr(input),]
+
+
+        super().__init__(AggShape(len(self._elems)))
 
     def _sameas(self, other):
         if len(self)!=len(other):
@@ -70,20 +75,20 @@ class AggExpr(IndexableExprInterface):
     def __getitem__(self, i):
         if i<0 or i>=(len(self)):
             raise(IndexError('Index {} out of range [0,{}]'.format(i, len(self)-1)))
-        return self.data[i]
+        return self._elems[i]
 
     def __len__(self):
-        return len(self.data)
+        return len(self._elems)
 
     def __contains__(self, x):
-        return x in self.data
+        return x in self._elems
 
     def __iter__(self):
         return AggExprIterator(self)
 
     def __str__(self):
         rtn = 'Agg('
-        for i,e in enumerate(self.data):
+        for i,e in enumerate(self._elems):
             if i>0:
                 rtn += ', '
             rtn += e.__str__()
@@ -91,7 +96,7 @@ class AggExpr(IndexableExprInterface):
         return rtn
 
     def append(self, entry):
-        self.data.append(entry)
+        self._elems.append(entry)
 
     def isAggregate(self):
         return True

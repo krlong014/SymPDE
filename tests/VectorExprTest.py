@@ -1,6 +1,6 @@
-from VectorExpr import Vector
-from ConstantExpr import ConstantVector
-from Coordinate import Coordinate
+from SymPDE import Vector, Coordinate
+import SymPDE
+import numpy as np
 import pytest
 
 class TestVectorSanity:
@@ -23,21 +23,21 @@ class TestVectorSanity:
         y = 2
         v = Vector(x, y)
 
-        assert(isinstance(v, ConstantVectorExpr))
+        assert(v.isConstant())
 
     def test_ConstantVec2(self):
         x = 1
         y = 2
         v = 3.14*Vector(x, y)
 
-        assert(isinstance(v, ConstantVectorExpr))
+        assert(v.isConstant())
 
     def test_ConstantVec3(self):
         x = 1
         y = 2
         v = Vector(x, y)*3.14
 
-        assert(isinstance(v, ConstantVectorExpr))
+        assert(v.isConstant())
 
 
 
@@ -65,7 +65,7 @@ class TestVectorExpectedErrors:
 
     def test_VectorScalarInput2(self):
         with pytest.raises(ValueError) as err_info:
-            bad = Vector(array([1.0]))
+            bad = Vector(np.array([1.0]))
 
 
         print('detected expected exception: {}'.format(err_info))

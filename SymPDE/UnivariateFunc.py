@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
-from Expr import Expr, UnaryExpr, BinaryExpr, Coordinate
-from ExprShape import ScalarShape
+from . Expr import Expr
+from . ArithmeticExpr import UnaryExpr, BinaryExpr
+from . Coordinate import Coordinate
+from . ExprShape import ScalarShape
 
 
 ## Generic real-valued univariate function

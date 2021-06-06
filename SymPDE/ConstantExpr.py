@@ -4,13 +4,15 @@
 #
 #############################################################################
 
-from Expr import Expr
-from ExprShape import ScalarShape, VectorShape
-from IndexableExpr import (
+from . Expr import Expr
+from . ExprShape import ExprShape, ScalarShape, VectorShape
+from . IndexableExpr import (
         IndexableExprIterator,
         IndexableExprInterface,
         IndexableExprElementInterface
     )
+from numpy.linalg import norm
+from numpy import inf, dot, array_equiv
 from abc import ABC, abstractmethod
 
 class ConstantExprBase(Expr, ABC):
@@ -47,6 +49,9 @@ class ConstantExprBase(Expr, ABC):
 
     def _sameas(self, other):
         return array_equiv(self._data, other._data)
+
+    def __eq__(self, other):
+        return self.sameas(other)
 
     def _isZero(self):
         if isinstance(self.shape(), ScalarShape):

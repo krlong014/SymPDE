@@ -135,8 +135,8 @@ class ExprShape:
 
 class AggShape(ExprShape):
     '''Class for Aggregate expression shape'''
-    def __init__(self):
-        super().__init__(-1)
+    def __init__(self, dim):
+        super().__init__(dim)
 
     def __str__(self):
         return "Agg"

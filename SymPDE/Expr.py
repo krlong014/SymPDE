@@ -2,7 +2,7 @@
 #
 # =============================================================================
 from abc import ABC, abstractmethod
-from ExprShape import (ExprShape, ScalarShape, TensorShape,
+from . ExprShape import (ExprShape, ScalarShape, TensorShape,
     VectorShape, AggShape)
 from numbers import Number
 from numpy import dot, array_equiv, inf, ndarray
@@ -81,15 +81,15 @@ class Expr(ABC):
 
     def __neg__(self):
         '''Negate self.'''
-        from ArithmeticExpr import UnaryMinus
-        from ConstantExpr import ConstantExprBase
+        from . ArithmeticExpr import UnaryMinus
+        from . ConstantExpr import ConstantExprBase
 
         if isinstance(self, ConstantExprBase):
             rtn = copy.deepcopy(self)
             rtn._data = -rtn._data
             return rtn
         if self.isAggregate():
-            raise ValueError('cannot negate an Aggregate')
+            raise ValueError('Cannot negate an Aggregate')
         return UnaryMinus(self)
 
     def __add__(self, other):
@@ -148,17 +148,17 @@ class Expr(ABC):
     def _addOrSubtract(leftIn, rightIn, sign):
         '''Internal addition/subtraction.'''
 
-        from ArithmeticExpr import SumExpr
+        from . ArithmeticExpr import SumExpr
 
         # Convert input to Expr
         left = Expr._convertToExpr(leftIn)
         right = Expr._convertToExpr(rightIn)
 
-        logger.debug('_addOrSubtract: L=[{}], R=[{}], sign={}'.format(left, right, sign))
+        logging.debug('_addOrSubtract: L=[{}], R=[{}], sign={}'.format(left, right, sign))
 
         # Check that neither operand is an aggregate
         if left.isAggregate() or right.isAggregate():
-            raise ValueError('Cannot  add/subtract aggregate expr:\nL={}\nR={}'
+            raise ValueError('Cannot add/subtract aggregate expr:\nL={}\nR={}'
                 .format(left, right))
 
         # Check for compatibility
@@ -190,18 +190,18 @@ class Expr(ABC):
     def _multiply(leftIn, rightIn):
         '''Internal multiplication.'''
 
-        from ArithmeticExpr import ProductExpr, DotProductExpr
-        from ConstantExpr import ConstantVectorExpr
+        from . ArithmeticExpr import ProductExpr, DotProductExpr
+        from . ConstantExpr import ConstantVectorExpr
 
         # Convert input to Expr
         left = Expr._convertToExpr(leftIn)
         right = Expr._convertToExpr(rightIn)
 
-        logger.debug('_multiply: L=[{}], R=[{}]'.format(left, right))
+        logging.debug('_multiply: L=[{}], R=[{}]'.format(left, right))
 
         # Check that neither operand is an aggregate
         if left.isAggregate() or right.isAggregate():
-            raise ValueError('Cannot  multiply aggregate expr:\nL={}\nR={}'
+            raise ValueError('Cannot multiply aggregate expr:\nL={}\nR={}'
                 .format(left, right))
 
         # Check for compatibility
@@ -245,8 +245,8 @@ class Expr(ABC):
     def _divide(leftIn, rightIn):
         '''Internal division.'''
 
-        from ArithmeticExpr import QuotientExpr, ProductExpr
-        from ConstantExpr import ConstantScalarExpr
+        from . ArithmeticExpr import QuotientExpr, ProductExpr
+        from . ConstantExpr import ConstantScalarExpr
 
         # Convert input to Expr
         left = Expr._convertToExpr(leftIn)
@@ -254,7 +254,7 @@ class Expr(ABC):
 
         # Check that neither operand is an aggregate
         if left.isAggregate() or right.isAggregate():
-            raise ValueError('Cannot  divide aggregate expr:\nnum={}\ndenom={}'
+            raise ValueError('Cannot divide aggregate expr:\nnum={}\ndenom={}'
                 .format(left, right))
 
         # Division by a vector or tensor is an error
@@ -295,13 +295,13 @@ class Expr(ABC):
         base = Expr._convertToExpr(baseIn)
         power = Expr._convertToExpr(powerIn)
 
-        from ArithmeticExpr import PowerExpr
-        from ConstantExpr import ConstantScalarExpr
+        from . ArithmeticExpr import PowerExpr
+        from . ConstantExpr import ConstantScalarExpr
 
         # Check that neither operand is an aggregate
-        if left.isAggregate() or right.isAggregate():
+        if base.isAggregate() or power.isAggregate():
             raise ValueError('Cannot  exponentiate aggregate expr:\nbase={}\nexp={}'
-                .format(left, right))
+                .format(base, power))
 
         # Exponentiation with non-scalars is undefined here
         if (not isinstance(Expr._getShape(base), ScalarShape)):
@@ -373,7 +373,7 @@ class Expr(ABC):
     def _isZero(x):
         '''Determine whether an argument is identically zero. '''
 
-        from ConstantExpr import ConstantExprBase
+        from . ConstantExpr import ConstantExprBase
 
         if isinstance(x, Number) and x==0:
             return True
@@ -386,7 +386,7 @@ class Expr(ABC):
 
     def _isIdentity(x):
         '''Determine whether an argument is a multiplicative identity. '''
-        from ConstantExpr import ConstantScalarExpr
+        from . ConstantExpr import ConstantScalarExpr
 
         if not x.isConstant():
             return False
@@ -404,7 +404,7 @@ class Expr(ABC):
 
     def _maybeParenthesize(x):
         '''Put a sum inside parentheses when printing. '''
-        from ArithmeticExpr import SumExpr
+        from . ArithmeticExpr import SumExpr
 
         if isinstance(x, SumExpr):
             return '({})'.format(x)
@@ -421,7 +421,7 @@ class Expr(ABC):
         '''Convert input to an expression, if possible. If the input is an
         expression, return it unmodified.'''
 
-        from ConstantExpr import ConstantScalarExpr, ConstantVectorExpr
+        from . ConstantExpr import ConstantScalarExpr, ConstantVectorExpr
 
         if isinstance(x, Expr):
             return x

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from ExprShape import (ScalarShape, VectorShape)
+from . ExprShape import (ScalarShape, VectorShape)
 
 class BasisBase(ABC):
     def __init__(self, order, shape):

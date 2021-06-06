@@ -1,17 +1,18 @@
-from Expr import Expr
-from IndexableExpr import (
+from . Expr import Expr
+from . IndexableExpr import (
         IndexableExprIterator,
         IndexableExprInterface,
         IndexableExprElementInterface
     )
-from ExprShape import (
+from . ExprShape import (
         ExprShape, ScalarShape, TensorShape,
         VectorShape, AggShape
     )
-from ConstantExpr import ConstantVectorExpr
-from AggExpr import AggExpr
+from . ConstantExpr import ConstantVectorExpr
+from . AggExpr import AggExpr
 from numpy import ndarray, array
 from numbers import Number
+import logging
 
 
 def Vector(*args):
@@ -85,7 +86,7 @@ class AggedVectorExpr(Expr, IndexableExprInterface):
         return self._elems[i]
 
     def __iter__(self):
-        return VectorExprIterator(self)
+        return AggedVectorIterator(self)
 
     def __str__(self):
         rtn = 'Vector('

@@ -2,8 +2,11 @@
 
 class DiscreteSpaceBase:
 
-    def __init__(self, basis):
-        self._basis = basis
+    def __init__(self, bases):
+        self._bases = bases
 
-    def basis(self):
-        return self._basis
+    def basis(self, func):
+        return self._bases[func]
+
+    def numFuncs(self):
+        return len(self._bases)

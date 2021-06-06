@@ -4,8 +4,8 @@
 #
 #############################################################################
 
-import Expr
-from Expr import ScalarShape
+from . Expr import Expr
+from . ExprShape import ScalarShape
 
 
 class Coordinate(Expr):

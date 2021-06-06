@@ -1,13 +1,16 @@
 from abc import ABC, abstractmethod
 from numpy import exp, sqrt
 import numpy as np
-from Expr import (Expr, BinaryExpr, SumExpr, ProductExpr, UnaryMinus,
-                  DotProductExpr, CrossProductExpr,
-                  QuotientExpr, PowerExpr, UnaryExpr, ConstantExprBase,
-                  Coordinate)
-from UnivariateFunc import (UnivariateFuncExpr, Exp, Log, Sqrt, ArcTan2Func, ArcTan2,
-                      Cos, Sin, Tan, Cosh, Sinh, Tanh,
-                      ArcCos, ArcSin, ArcTan, ArcCosh, ArcSinh, ArcTanh)
+from . Expr import Expr
+from . ArithmeticExpr import (BinaryExpr, SumExpr, ProductExpr, UnaryMinus,
+    DotProductExpr, CrossProductExpr, QuotientExpr, PowerExpr, UnaryExpr)
+from . ConstantExpr import ConstantExprBase
+from . Coordinate import Coordinate
+from . UnivariateFunc import (
+    UnivariateFuncExpr, Exp, Log, Sqrt,
+    ArcTan2Func, ArcTan2,
+    Cos, Sin, Tan, Cosh, Sinh, Tanh,
+    ArcCos, ArcSin, ArcTan, ArcCosh, ArcSinh, ArcTanh)
 
 
 
