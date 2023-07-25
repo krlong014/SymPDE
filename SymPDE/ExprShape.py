@@ -33,7 +33,7 @@ class ExprShape:
         '''Determine whether two operands are additively compatible'''
 
         if isinstance(left, AggShape) or isinstance(right, AggShape):
-            return False
+            return False # HUH???
 
         # Make sure both inputs are subtypes of ExprShape
         if not isinstance(left, ExprShape):
@@ -43,7 +43,7 @@ class ExprShape:
 
         if not isinstance(right, ExprShape):
             raise TypeError(
-                'invalid left operand to addition compatibility test [{}]'.format(right)
+                'invalid right operand to addition compatibility test [{}]'.format(right)
                 )
 
         return left.sameas(right)
@@ -52,7 +52,7 @@ class ExprShape:
         '''Determine whether two operands are multiplicatively compatible'''
 
         if isinstance(left, AggShape) or isinstance(right, AggShape):
-            return False
+            return False # HUH???
 
         # Make sure both inputs are subtypes of ExprShape
         if not isinstance(left, ExprShape):
@@ -116,7 +116,7 @@ class ExprShape:
             return VectorShape(right.dim())
 
 
-        # Tensor times vector produces a column vector
+        # Tensor times vector produces a row vector
         if (isinstance(left, VectorShape) and isinstance(right, TensorShape)):
             return VectorShape(right.dim())
 
