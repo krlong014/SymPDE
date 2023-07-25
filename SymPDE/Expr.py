@@ -90,7 +90,7 @@ class Expr(ABC):
             rtn._data = -rtn._data
             return rtn
         if self.isAggregate():
-            raise ValueError('Cannot negate an Aggregate')
+            raise ValueError('Cannot negate an Aggregate') # HUH??
         return UnaryMinus(self)
 
     def __add__(self, other):
@@ -160,7 +160,7 @@ class Expr(ABC):
         # Check that neither operand is an aggregate
         if left.isAggregate() or right.isAggregate():
             raise ValueError('Cannot add/subtract aggregate expr:\nL={}\nR={}'
-                .format(left, right))
+                .format(left, right)) # HUH??
 
         # Check for compatibility
         ExprShape.assertAdditiveCompatibility(Expr._getShape(left),
@@ -203,7 +203,7 @@ class Expr(ABC):
         # Check that neither operand is an aggregate
         if left.isAggregate() or right.isAggregate():
             raise ValueError('Cannot multiply aggregate expr:\nL={}\nR={}'
-                .format(left, right))
+                .format(left, right)) # HUH??
 
         # Check for compatibility
         ExprShape.assertMultiplicativeCompatibility(Expr._getShape(left),
