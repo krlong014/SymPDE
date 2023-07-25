@@ -40,8 +40,33 @@ class FunctionWithBasis(Expr):
     def isDiscrete(self):
         return False
 
+    def funcID(self):
+        return self._funcID
+
+    def name(self):
+        return self._name
+
     def _lessThan(self, other):
         return self._funcID < other._funcID
+
+    def hasTest(self):
+        return self.isTest()
+
+    def hasUnknown(self):
+        return self.isUnknown()
+
+    def isLinearInTests(self):
+        return self.isTest()
+
+    def getTests(self):
+        if self.isTest():
+            return {self}
+        return set()
+
+    def getUnks(self):
+        if self.isUnknown():
+            return {self}
+        return set()
 
 
 
@@ -127,6 +152,14 @@ class ScalarTestFunction(FunctionWithScalarBasis):
     def isTest(self):
         return True
 
+    def __repr__(self):
+        return 'ScalarTestFunction(name={}, bas={})'.format(self._name,
+                                                            self.basis())
+
+
+
+
+
 
 class VectorTestFunction(FunctionWithVectorBasis):
     def __init__(self, basis, name):
@@ -134,6 +167,10 @@ class VectorTestFunction(FunctionWithVectorBasis):
 
     def isTest(self):
         return True
+
+    def __repr__(self):
+        return 'VectorTestFunction(name={}, bas={})'.format(self.name(),
+                                                            self.basis())
 
 
 class TestFunctionElement(VectorFunctionElement):
@@ -167,6 +204,10 @@ class ScalarUnknownFunction(FunctionWithScalarBasis):
     def isUnknown(self):
         return True
 
+    def __repr__(self):
+        return 'ScalarUnknownFunction(name={}, bas={})'.format(self.name(),
+                                                            self.basis())
+
 
 class VectorUnknownFunction(FunctionWithVectorBasis):
     def __init__(self, basis, name):
@@ -174,6 +215,10 @@ class VectorUnknownFunction(FunctionWithVectorBasis):
 
     def isUnknown(self):
         return True
+
+    def __repr__(self):
+        return 'VectorUnknownFunction(name={}, bas={})'.format(self.name(),
+                                                            self.basis())
 
 
 class UnknownFunctionElement(VectorFunctionElement):

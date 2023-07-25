@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from functools import total_ordering
 from . Expr import Expr
 from . ArithmeticExpr import UnaryExpr
 from . Coordinate import Coordinate
@@ -48,7 +49,16 @@ class DiffOpOnFunction(DiffOp):
         return self.arg().isDiscrete()
 
 
+    def isIndependentOf(self, u):
+        if arg==u:
+            return False
+        return True
 
+    def isLinearInTests(self):
+        return self.isTest()
+
+
+@total_ordering
 class HungryDiffOp(ABC):
 
     def __init__(self):
@@ -62,6 +72,14 @@ class HungryDiffOp(ABC):
     def outputShape(self, input):
         pass
 
+    def __lt__(self, other):
+        return self.__str__() < other.__str__()
+
+    def __eq__(self, other):
+        return self.__str__() == other.__str__()
+
+    def __hash__(self):
+        return hash(self.__str__())
 
     def __call__(self, arg):
 
@@ -101,6 +119,7 @@ class _IdentityOp(HungryDiffOp):
 
     def __str__(self):
         return 'IdentityOp'
+
 
 def Partial(f, coord):
     if isinstance(coord, int):

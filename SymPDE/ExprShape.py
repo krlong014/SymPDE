@@ -9,6 +9,11 @@ class ExprShape:
     (*) VectorShape
     (*) TensorShape
     (*) Aggregate (Agg) shape
+
+    These are implemented as subclasses of ExprShape. 
+
+    The meaning of scalar, vector, and tensor is obvious. An aggregate is a list of expressions, 
+    intended to represent collections of like variables such as concentrations of a set of species. 
     '''
     def __init__(self, dim):
         self._dim = dim
@@ -33,12 +38,12 @@ class ExprShape:
         # Make sure both inputs are subtypes of ExprShape
         if not isinstance(left, ExprShape):
             raise TypeError(
-                'invalid left operand to mult compatibility test [{}]'.format(left)
+                'invalid left operand to addition compatibility test [{}]'.format(left)
                 )
 
         if not isinstance(right, ExprShape):
             raise TypeError(
-                'invalid left operand to mult compatibility test [{}]'.format(right)
+                'invalid left operand to addition compatibility test [{}]'.format(right)
                 )
 
         return left.sameas(right)

@@ -60,6 +60,39 @@ class ExprWithChildren(Expr):
                 return False
         return True
 
+    def hasTest(self):
+        for c in self._children:
+            if c.hasTest():
+                return True
+        return False
+
+    def hasUnknown(self):
+        for c in self._children:
+            if c.hasUnknown():
+                return True
+        return False
+
+    def isIndependentOf(self, u):
+        for c in self._children:
+            if not c.isIndependentOf(u):
+                return False
+        return True
+
+    def getTests(self):
+        rtn = set()
+        for c in self._children:
+            s = c.getTests()
+            rtn = rtn.union(s)
+        return rtn
+
+    def getUnks(self):
+        rtn = set()
+        for c in self._children:
+            s = c.getUnks()
+            rtn = rtn.union(s)
+        return rtn
+
+
 class UnaryExpr(ExprWithChildren):
     def __init__(self, arg, shape):
         super().__init__((arg,),shape)
@@ -81,6 +114,10 @@ class UnaryMinus(UnaryExpr):
 
     def __repr__(self):
         return 'UnaryMinus[arg={}]'.format(self.arg().__repr__())
+
+    def isLinearInTests(self):
+        return self.arg().isLinearInTests()
+
 
 
 class BinaryExpr(ExprWithChildren):
@@ -135,6 +172,13 @@ class SumExpr(BinaryArithmeticOp):
         return 'SumExpr[left={}, right={}, shape={}]'.format(self.left().__repr__(),
             self.right().__repr__(), self.shape())
 
+    def everyTermHasTest(self):
+        return self.left().hasTest() and self.right().hasTest()
+
+    def isLinearInTests(self):
+        return (self.left().isLinearInTests()
+                and self.right().isLinearInTests())
+
 
 class ProductExpr(BinaryArithmeticOp):
     def __init__(self, L, R):
@@ -146,6 +190,14 @@ class ProductExpr(BinaryArithmeticOp):
     def __repr__(self):
         return 'ProductExpr[left={}, right={}]'.format(self.left().__repr__(),
             self.right().__repr__())
+
+    def isLinearInTests(self):
+        if ( (self.left().isLinearInTests() and not self.right().hasTest())
+            or
+            (self.right().isLinearInTests() and not self.left().hasTest()) ):
+            return True
+        return False
+
 
 
 def Dot(a, b):
@@ -170,6 +222,13 @@ class DotProductExpr(BinaryExpr):
         return 'DotProductExpr[left={}, right={}, shape={}]'.format(self.left().__repr__(),
             self.right().__repr__(), self.shape())
 
+    def isLinearInTests(self):
+        if ( (left.isLinearInTests() and not right.hasTests())
+            or
+            (right.isLinearInTests() and not left.hasTests()) ):
+            return True
+        return False
+
 def Cross(a, b):
     assert(isinstance(a.shape(), VectorShape)
         and isinstance(b.shape(), VectorShape))
@@ -184,12 +243,24 @@ class CrossProductExpr(BinaryExpr):
     def __str__(self):
         return 'cross({},{})'.format(self.L, self.R)
 
+    def isLinearInTests(self):
+        if ( (left.isLinearInTests() and not right.hasTests())
+            or
+            (right.isLinearInTests() and not left.hasTests()) ):
+            return True
+        return False
+
 class QuotientExpr(BinaryArithmeticOp):
     def __init__(self, L, R):
         super().__init__(L, R, L.shape())
 
     def opString(self):
         return '/'
+
+    def isLinearInTests(self):
+        if left.isLinearInTests() and not right.hasTests():
+            return True
+        return False
 
 
 

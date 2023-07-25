@@ -231,6 +231,9 @@ def differentiateUnivariateFunc(expr, op):
     return f.deriv(u) * spatialFAD(u, op)
 
 
+    
+
+
 if __name__=='__main__':
 
     x = Coordinate(0)

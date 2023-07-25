@@ -1,5 +1,6 @@
 # =============================================================================
 #
+#
 # =============================================================================
 from abc import ABC, abstractmethod
 from . ExprShape import (ExprShape, ScalarShape, TensorShape,
@@ -438,3 +439,33 @@ class Expr(ABC):
         '''Indicate whether the argument is of a type that can be
         converted to an expression. '''
         return isinstance(x, (Expr, Number, ndarray))
+
+
+
+    # ======================================================================
+    # Analyzing structure
+    # ======================================================================
+
+
+    def isIndependentOf(self, u):
+        if self==u:
+            return False
+        return True
+
+    def everyTermHasTest(self):
+        return self.hasTest()
+
+    def hasTest(self):
+        return False
+
+    def isLinearInTests(self):
+        '''Indicate whether this expression is linear in test functions'''
+        return False
+
+    def getTests(self):
+        '''Find all test functions in this expression'''
+        return set()
+
+    def getUnks(self):
+        '''Find all test functions in this expression'''
+        return set()
