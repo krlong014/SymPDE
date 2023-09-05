@@ -1,6 +1,38 @@
 import itertools as it
+from abc import ABC, abstractmethod
+from collections.abc import Iterable
+from ArithmeticExpr import ExprWithChildren as EWC
+from ExprShape import ExprShape
+import ExprShape as exprshp 
+import ArithmeticExpr as arexpr 
+from Expr import Expr 
+import numpy as np
 
+
+## flattens a list of lists into a single list
+def flatten(lst):
+	# print("triggered flatten({})".format(lst))
+	if type(lst) != list:
+		return lst 
+
+	flatList = []
+
+
+
+	for item in lst:
+		if type(item) == list:
+			for x in flatten(item):
+				flatList.append(x)
+		else:
+			flatList.append(item)
+
+	return flatList
+
+
+
+## intermediate step in intPart
 def part(n):
+	# print("triggered part({})".format(n))
 	if n == 1:
 		return [1]
 
@@ -8,82 +40,62 @@ def part(n):
 
 	for i in range(n):
 		for j in range(len(part(i))):
-			parts.append([n - i] + [part(i)[j]])
+			parts.append(flatten([n - i] + [part(i)[j]]))
 
 	return parts
 
+## finds all integer patitions of an integer n
 def intPart(n):
+	# print("triggered intPart({})".format(n))
 	return [[n]] + part(n)
 
-# testParts = intPart(4)
-# print("partitions = ",testParts)
 
-#assuming order d and n arguments
+## assuming order d and n arguments, builds the Q set
 def buildQ(d,n):
-	dummyIter = [(i+1) for i in range(n)]
+	if d == 1:
+		Q = [i+1 for i in range(n)]
+	else:
+		dummyIter = [(i+1) for i in range(n)]
 
-	Q = list(it.product(dummyIter,repeat=d))
+		Q = list(it.product(dummyIter,repeat=d))
+	
 	return Q
 
-Q = buildQ(2,3)
+
+## builds all Q sets with the highest order being ordercap for an n argument expr
+def buildAllQ(ordercap,n):
+	Qsets = []
+	for i in range(ordercap):
+		Qsets.append(buildQ(i+1,n))
+
+	return Qsets
+
+Qsets = buildAllQ(3,3)
+# print("Qsets = ",Qsets)
 
 
-class Qset():
-	def __init__(self, ordercap, ExprWithChildrenInstance):
-		self.ordercap = ordercap
-		self.ExperWithChildrenInstance = ExprWithChildrenInstance
+shape = ExprShape(1)
+a1 = Expr(shape)
+a2 = Expr(shape)
+g = arexpr.PowerExpr(a1,a2)
 
-		def buildSpecific(self, order):
-			#n = number of arguments in ExprWithChildrenInstance
-			dummyIter = [(i + 1) for i in range(n)]
-			Qfull = list(it.product(dummyIter, repeat=order))
-			return Qfull
+def refineQsets(Qsets, g):
+	order = len(Qsets)
 
-		def buildAll(self):
-			#n = number of arguments in ExprWithChildrenInstance
-			Qsets = [] * self.ordercap
-			for i in range(self.ordercap):
-				#not sure what goes before buildSpecific
-				Qsets[i] = buildSpecific(i)
+	if isinstance(g,arexpr.SumExpr):
+		Qconst = Qsets.pop(0)
+		Qvar = Qsets
 
-			return Qsets
-
-
-		def refine(self):
-			if isinstance(self.ExprWithChildrenInstance, SumExpr):
-				if self.order == 1:
-					Qconst = Qfull
-					Qvar = None 
-				else:
-					Qconst = None 
-					Qvar = Qfull
-
-			if isinstance(self.ExprWithChildrenInstance, ProductExpr) 
-			or isinstance(self.ExprWithChildrenInstance, QuotientExpr) 
-			or isinstance(self.ExprWithChildrenInstance, PowerExpr):
-				if self.order == 2:
-					Qconst = Qfull
-					Qvar = None 
-				else:
-					Qconst = None
-					Qvar = Qfull 
-
-			return [Qconst, Qvar]
-
-		def refineAll(self):
-			Qsets = self.buildAll()
-			QconstSets = [] * self.ordercap 
-			QvarSets = [] * self.ordercap
-
-			for i in range(self.ordercap):
-				[QconstSets[i], QvarSets[i]] = Qsets[i].refine()
-
-			return [QconstSets, QvarSets]
+	if isinstance(g,arexpr.ProductExpr) or isinstance(g, arexpr.QuotientExpr) or isinstance(g,arexpr.PowerExpr):
+		if order >= 2:
+			Qconst = Qsets.pop(1)
+			Qvar = Qsets 
+		else:
+			Qconst = []
+			Qvar = Qsets 
+	
+	return(Qconst, Qvar)
 
 
-
-# print("Q = ",Q)
-
-#The constant Q sets will depend on the type of Expr
-	#sum/diff expr: Q_1^C = Q_1; Q_i^V = Q_i for all i != 1
-	#prod/quot/exp expr: Q_2^C = Q_2; Q_i^V = Q_i fpr all i != 2
+[Qconst, Qvar] = refineQsets(Qsets,g)
+print("Qconst = {}, Qvar = {}".format(Qconst,Qvar))
