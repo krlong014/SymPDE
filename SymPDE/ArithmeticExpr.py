@@ -10,8 +10,7 @@ from numpy.linalg import norm
 #############################################################################
 
 class ExprWithChildren(Expr):
-    '''ExprWithChildren is a base class for operations that act on other
-    operations.'''
+    '''ExprWithChildren is a base class for operations that act on expressions.'''
     def __init__(self, children, shape):
         '''Constructor for ExprWithChildren.'''
         if not (isinstance(children, (list, tuple)) and len(children)>0):
