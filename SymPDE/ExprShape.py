@@ -9,6 +9,11 @@ class ExprShape:
     (*) VectorShape
     (*) TensorShape
     (*) Aggregate (Agg) shape
+
+    These are implemented as subclasses of ExprShape. 
+
+    The meaning of scalar, vector, and tensor is obvious. An aggregate is a list of expressions, 
+    intended to represent collections of like variables such as concentrations of a set of species. 
     '''
     def __init__(self, dim):
         self._dim = dim
@@ -28,17 +33,17 @@ class ExprShape:
         '''Determine whether two operands are additively compatible'''
 
         if isinstance(left, AggShape) or isinstance(right, AggShape):
-            return False
+            return False # HUH???
 
         # Make sure both inputs are subtypes of ExprShape
         if not isinstance(left, ExprShape):
             raise TypeError(
-                'invalid left operand to mult compatibility test [{}]'.format(left)
+                'invalid left operand to addition compatibility test [{}]'.format(left)
                 )
 
-        if not isinstance(left, ExprShape):
+        if not isinstance(right, ExprShape):
             raise TypeError(
-                'invalid left operand to mult compatibility test [{}]'.format(left)
+                'invalid right operand to addition compatibility test [{}]'.format(right)
                 )
 
         return left.sameas(right)
@@ -47,7 +52,7 @@ class ExprShape:
         '''Determine whether two operands are multiplicatively compatible'''
 
         if isinstance(left, AggShape) or isinstance(right, AggShape):
-            return False
+            return False # HUH???
 
         # Make sure both inputs are subtypes of ExprShape
         if not isinstance(left, ExprShape):
@@ -55,9 +60,9 @@ class ExprShape:
                 'invalid left operand to mult compatibility test [{}]'.format(left)
                 )
 
-        if not isinstance(left, ExprShape):
+        if not isinstance(right, ExprShape):
             raise TypeError(
-                'invalid left operand to mult compatibility test [{}]'.format(left)
+                'invalid right operand to mult compatibility test [{}]'.format(right)
                 )
 
         # Anything times a scalar is defined
@@ -111,7 +116,7 @@ class ExprShape:
             return VectorShape(right.dim())
 
 
-        # Tensor times vector produces a column vector
+        # Tensor times vector produces a row vector
         if (isinstance(left, VectorShape) and isinstance(right, TensorShape)):
             return VectorShape(right.dim())
 
@@ -135,8 +140,8 @@ class ExprShape:
 
 class AggShape(ExprShape):
     '''Class for Aggregate expression shape'''
-    def __init__(self):
-        super().__init__(-1)
+    def __init__(self, dim):
+        super().__init__(dim)
 
     def __str__(self):
         return "Agg"

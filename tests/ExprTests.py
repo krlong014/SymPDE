@@ -1,12 +1,13 @@
 import pytest
 import numpy as np
-from Expr import (Expr, ConstantScalarExpr, ConstantVectorExpr,
-    Coordinate)
-from UnivariateFunc import (Exp, Sqrt, Log, Cos, Sin, Tan,
+from SymPDE.Expr import Expr
+from SymPDE.ConstantExpr import ConstantScalarExpr, ConstantVectorExpr
+from SymPDE.Coordinate import Coordinate
+from SymPDE.UnivariateFunc import (Exp, Sqrt, Log, Cos, Sin, Tan,
                     Cosh, Sinh, Tanh, ArcCos, ArcSin, ArcTan,
                     ArcCosh, ArcSinh, ArcTanh)
 
-from SimpleEvaluator import compareEval, evalExpr
+from SymPDE.SimpleEvaluator import compareEval, evalExpr
 
 
 class TestOpsWithConstants:

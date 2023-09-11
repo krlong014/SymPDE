@@ -1,8 +1,12 @@
 from abc import ABC, abstractmethod
-from Expr import Expr, UnaryExpr, Coordinate, AggExpr
-from ExprShape import (ExprShape, ScalarShape, TensorShape, VectorShape)
-from VectorExprs import Vector
-from SymbolicFunction import SymbolicFunctionBase
+from functools import total_ordering
+from . Expr import Expr
+from . ArithmeticExpr import UnaryExpr
+from . Coordinate import Coordinate
+from . ExprShape import (ExprShape, ScalarShape, TensorShape, VectorShape)
+from . VectorExpr import Vector
+from . BasisBase import ScalarBasisBase, VectorBasisBase
+from . FunctionWithBasis import TestFunction, FunctionWithBasis
 import pytest
 
 class DiffOp(UnaryExpr):
@@ -15,24 +19,46 @@ class DiffOp(UnaryExpr):
             raise ValueError('Undefined DiffOp action: {} acting on {}'.format(op, arg))
 
         super().__init__(arg, myShape)
-        self.op = op
+        self._op = op
+
+    def op(self):
+        return self._op
 
 
     def __str__(self):
-        return '{}({})'.format(self.op.__str__(), self.arg.__str__())
+        return '{}({})'.format(self.op().__str__(), self.arg().__str__())
 
 
 
 class DiffOpOnFunction(DiffOp):
 
     def __init__(self, op, arg):
-        assert(isinstance(arg, SymbolicFunctionBase))
-        super().init(op, arg)
+        assert(isinstance(arg, FunctionWithBasis))
+        super().__init__(op, arg)
 
     def funcID(self):
         return self.arg().funcID()
 
+    def isTest(self):
+        return self.arg().isTest()
 
+    def isUnknown(self):
+        return self.arg().isUnknown()
+
+    def isDiscrete(self):
+        return self.arg().isDiscrete()
+
+
+    def isIndependentOf(self, u):
+        if arg==u:
+            return False
+        return True
+
+    def isLinearInTests(self):
+        return self.isTest()
+
+
+@total_ordering
 class HungryDiffOp(ABC):
 
     def __init__(self):
@@ -46,6 +72,14 @@ class HungryDiffOp(ABC):
     def outputShape(self, input):
         pass
 
+    def __lt__(self, other):
+        return self.__str__() < other.__str__()
+
+    def __eq__(self, other):
+        return self.__str__() == other.__str__()
+
+    def __hash__(self):
+        return hash(self.__str__())
 
     def __call__(self, arg):
 
@@ -65,7 +99,7 @@ class HungryDiffOp(ABC):
 
 
         # Form the diff op expression
-        if isinstance(f, SymbolicFunctionBase):
+        if isinstance(f, FunctionWithBasis):
             return DiffOpOnFunction(self, f)
         return DiffOp(self, f)
 
@@ -85,6 +119,7 @@ class _IdentityOp(HungryDiffOp):
 
     def __str__(self):
         return 'IdentityOp'
+
 
 def Partial(f, coord):
     if isinstance(coord, int):
@@ -121,7 +156,7 @@ def Partial(f, coord):
     if isinstance(coord, int):
         op = _Partial(coord)
     elif isinstance(coord, Coordinate):
-        op = _Partial(coord.dir)
+        op = _Partial(coord.direction())
     else:
         raise ValueError('unable to interpret direction {} in Partial()'.format(coord))
 
@@ -174,6 +209,12 @@ class _Gradient(HungryDiffOp):
     def __str__(self):
         return 'Grad'
 
+
+def Gradient(f, dim=3):
+    grad = _Gradient(dim)
+    return grad(f)
+
+
 class _Curl(HungryDiffOp):
     def __init__(self):
         super().__init__()
@@ -213,167 +254,3 @@ class _Rot(HungryDiffOp):
 def Rot(f):
     rot = _Rot()
     return rot(f)
-
-
-
-class TestDiffOpSanity:
-
-    def test_Partial1(self):
-
-        d_dx = _Partial(0)
-        x = Coordinate(0)
-        y = Coordinate(1)
-
-        f = x*y
-        df_dx = Partial(f, x)
-
-        print('df_dx=', df_dx)
-        assert(df_dx.sameas(DiffOp(d_dx, f)) and df_dx.shape()==f.shape())
-
-
-    def test_Partial2(self):
-
-        d_dx = _Partial(0)
-        x = Coordinate(0)
-        y = Coordinate(1)
-
-        f = Vector(x*y, x+y)
-        df_dx = Partial(f, x)
-
-        print('df_dx=', df_dx)
-        assert(df_dx.sameas(DiffOp(d_dx, f)) and df_dx.shape()==f.shape())
-
-
-    def test_Div(self):
-
-        x = Coordinate(0)
-        y = Coordinate(1)
-
-        div = _Div()
-        F = Vector(x,y)
-        divF = Div(F)
-
-        print('Div(F)=', divF)
-        assert(divF.sameas(DiffOp(div, F)) and divF.shape()==ScalarShape())
-
-
-    def test_Curl(self):
-
-        x = Coordinate(0)
-        y = Coordinate(1)
-        z = Coordinate(2)
-
-        curl = _Curl()
-        F = Vector(x,y,z)
-        curlF = Curl(F)
-
-        print('Curl(F)=', curlF)
-        assert(curlF.sameas(DiffOp(curl, F)) and curlF.shape().dim()==3)
-
-
-    def test_Rot(self):
-
-        x = Coordinate(0)
-        y = Coordinate(1)
-
-        rot = _Rot()
-        F = Vector(x,y)
-        rotF = rot(F)
-
-        print('Rot(F)=', rotF)
-        assert(rotF.sameas(DiffOp(rot, F)) and rotF.shape()==ScalarShape())
-
-
-
-class TestDiffOpExpectedErrors:
-
-    def test_DivOfScalar(self):
-        with pytest.raises(TypeError) as err_info:
-            x = Coordinate(0)
-            bad = Div(x)
-
-
-        print('detected expected exception: {}'.format(err_info))
-        assert('cannot accept' in str(err_info.value))
-
-
-    def test_CurlOfScalar(self):
-        with pytest.raises(TypeError) as err_info:
-            x = Coordinate(0)
-            bad = Curl(x)
-
-
-        print('detected expected exception: {}'.format(err_info))
-        assert('cannot accept' in str(err_info.value))
-
-    def test_RotOfScalar(self):
-        with pytest.raises(TypeError) as err_info:
-            x = Coordinate(0)
-            bad = Rot(x)
-
-
-        print('detected expected exception: {}'.format(err_info))
-        assert('cannot accept' in str(err_info.value))
-
-
-    def test_CurlOf2DVector(self):
-        with pytest.raises(TypeError) as err_info:
-            x = Coordinate(0)
-            y = Coordinate(1)
-            v = Vector(x,y)
-            bad = Curl(v)
-
-
-        print('detected expected exception: {}'.format(err_info))
-        assert('cannot accept' in str(err_info.value))
-
-
-    def test_RotOf3DVector(self):
-        with pytest.raises(TypeError) as err_info:
-            x = Coordinate(0)
-            y = Coordinate(1)
-            z = Coordinate(2)
-            v = Vector(x,y,z)
-            bad = Rot(v)
-
-
-        print('detected expected exception: {}'.format(err_info))
-        assert('cannot accept' in str(err_info.value))
-
-
-
-    def test_DiffOpOfNonsense(self):
-        with pytest.raises(TypeError) as err_info:
-            bad = Rot('not an expr')
-
-
-        print('detected expected exception: {}'.format(err_info))
-        assert('cannot accept' in str(err_info.value))
-
-
-
-    def test_DiffOpOfAgg(self):
-        with pytest.raises(TypeError) as err_info:
-            x = Coordinate(0)
-            y = Coordinate(1)
-            z = Coordinate(2)
-            L = AggExpr(x,y,z)
-
-            bad = Rot(L)
-
-
-        print('detected expected exception: {}'.format(err_info))
-        assert('cannot accept' in str(err_info.value))
-
-
-    def test_NonsensePartial1(self):
-        with pytest.raises(ValueError) as err_info:
-            d_dx = _Partial(0)
-            x = Coordinate(0)
-            y = Coordinate(1)
-
-            f = x*y
-            df_dx = Partial(x, f)
-
-        print('detected expected exception: {}'.format(err_info))
-        assert('unable to interpret' in str(err_info.value))

@@ -1,0 +1,6 @@
+\babel@toc {english}{}\relax 
+\beamer@sectionintoc {1}{High-level problem specifications}{3}{1}{1}
+\beamer@sectionintoc {2}{Automating simulation self-assembly from high-level interfaces}{7}{1}{2}
+\beamer@subsectionintoc {2}{1}{Mathematical foundations}{8}{1}{2}
+\beamer@subsectionintoc {2}{2}{Software architecture}{15}{1}{2}
+\beamer@subsectionintoc {2}{3}{Performance and scalability}{18}{1}{2}

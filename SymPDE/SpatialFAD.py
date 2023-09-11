@@ -1,8 +1,17 @@
-from ExprShape import ScalarShape, VectorShape, TensorShape
-from Expr import (Expr, UnaryMinus, SumExpr, ProductExpr, CrossProductExpr,
-                    QuotientExpr, PowerExpr, Coordinate, AggExpr)
-from DiffOp import (DiffOp, HungryDiffOp, Partial, _Partial,
+from . ExprShape import ScalarShape, VectorShape, TensorShape
+from . Expr import Expr
+from . ArithmeticExpr import (Dot, Cross, UnaryMinus, SumExpr, ProductExpr,
+    CrossProductExpr, QuotientExpr, PowerExpr)
+from SymPDE.Coordinate import Coordinate
+from . DiffOp import (DiffOp, HungryDiffOp, Partial, _Partial, _IdentityOp,
     _Div, Div, _Gradient, Gradient, _Curl, Curl, _Rot, Rot)
+from SymPDE.VectorExpr import Vector
+from SymPDE.AggExpr import AggExpr
+from . UnivariateFunc import (UnivariateFuncExpr,
+    Exp, Log, Sqrt, Cos, Sin, Tan, Cosh, Sinh, Tanh,
+    ArcCos, ArcSin, ArcTan, ArcCosh, ArcSinh, ArcTanh, ArcTan2)
+from . VectorExpr import Vector
+from . SimpleEvaluator import compareExprs
 
 class SpatialFADException(Exception):
     def __init__(self, descr, op, *args):
@@ -30,24 +39,40 @@ class SpatialFADException(Exception):
 
 
 
-def spatialFAD(expr, op):
+def spatialFAD(expr, op=_IdentityOp()):
 
     # Make sure arguments are valid
     assert(isinstance(expr, Expr) and isinstance(op, HungryDiffOp))
     assert(not isinstance(expr, AggExpr))
 
+
+
+    # If identity op, simply evaluate the expr
+    if isinstance(expr, DiffOp):
+        return spatialFAD(expr.arg(), expr.op())
+
+    if isinstance(op, _IdentityOp):
+        return expr
+
     if expr.isSpatialConstant():
         if expr.isScalar():
+            if isinstance(op, _Gradient):
+                return Vector([0,]*op.dim())
+            if isinstance(op, (_Curl, _Div, _Rot)):
+                raise SpatialFADException('Vector operator applied to scalar',
+                    op, expr)
             return 0
         if expr.isVector():
+            if isinstance(op, _Div, _Rot):
+                return 0
             return Vector([0,]*expr.shape().dim())
         raise SpatialFADException('tensor ops not yet implemented', op)
 
     if isinstance(expr, SumExpr):
-        return spatialDiff(expr.L, op) + spatialDiff(expr.R, op)
+        return spatialFAD(expr.left(), op) + expr.sign*spatialFAD(expr.right(), op)
 
     if isinstance(expr, UnaryMinus):
-        return -spatialDiff(expr, op)
+        return -spatialFAD(expr.arg(), op)
 
     if isinstance(expr, ProductExpr):
         return differentiateProduct(expr, op)
@@ -61,14 +86,17 @@ def spatialFAD(expr, op):
     if isinstance(expr, QuotientExpr):
         return differentiateQuotient(expr, op)
 
-    if isinstance(expr, CoordinateExpr):
+    if isinstance(expr, Coordinate):
         return differentiateCoordinate(expr, op)
 
-    if isinstance(expr, VectorExprInterface):
-        return differentiateVector(expr, op)
+    # if isinstance(expr, VectorExprInterface):
+    #     return differentiateVector(expr, op)
 
     if isinstance(expr, UnivariateFuncExpr):
         return differentiateUnivariateFunc(expr, op)
+
+    if isinstance(expr, DiffOp):
+        return spatialFAD(expr.arg(), expr.op())
 
     raise SpatialFADException('no rule to differentiate', op, expr)
 
@@ -181,7 +209,7 @@ def differentiatePower(expr, op):
     assert(b.isScalar())
     assert(e.isScalar())
 
-    return b**(e-1)*spatialFAD(b,op) + Log(b)*expr*spatialFAD(e, op)
+    return e*b**(e-1)*spatialFAD(b,op) + Log(b)*expr*spatialFAD(e, op)
 
 
 def differentiateVector(expr, op):
@@ -201,3 +229,18 @@ def differentiateUnivariateFunc(expr, op):
     f = expr
     u = expr.arg()
     return f.deriv(u) * spatialFAD(u, op)
+
+
+    
+
+
+if __name__=='__main__':
+
+    x = Coordinate(0)
+    y = Coordinate(1)
+    z = Coordinate(2)
+
+    f = x*x*x
+
+    df = spatialFAD(Partial(f,x))
+    print('df=', df)

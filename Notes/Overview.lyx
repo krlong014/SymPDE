@@ -1,0 +1,3020 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass extarticle
+\begin_preamble
+\input{klmacros}
+\notesheader
+
+\usepackage{algpseudocode}
+\end_preamble
+\use_default_options true
+\begin_modules
+KL-theorems
+\end_modules
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "palatino" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 1
+\bibtex_command default
+\index_command default
+\float_placement h
+\paperfontsize 12
+\spacing single
+\use_hyperref true
+\pdf_bookmarks true
+\pdf_bookmarksnumbered false
+\pdf_bookmarksopen false
+\pdf_bookmarksopenlevel 1
+\pdf_breaklinks false
+\pdf_pdfborder false
+\pdf_colorlinks true
+\pdf_backref false
+\pdf_pdfusetitle true
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style siam
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 0
+\use_minted 0
+\branch answers
+\selected 1
+\filename_suffix 0
+\color #5555ff
+\end_branch
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip medskip
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Overview
+\end_layout
+
+\begin_layout Standard
+The goal is to discretize a weak equation for an unknown 
+\begin_inset Formula $u\in U$
+\end_inset
+
+ of the form
+\begin_inset Formula 
+\begin{equation}
+\int_{\Omega}f\left(v,u,v_{x},u_{x}\right)\,dx=0\;\;\;\forall v\in V\label{eq:weak-eqn}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $f$
+\end_inset
+
+ is linear in the test functions 
+\begin_inset Formula $v$
+\end_inset
+
+ and 
+\begin_inset Formula $v_{x}$
+\end_inset
+
+ but may be nonlinear in 
+\begin_inset Formula $u$
+\end_inset
+
+ and its derivatives.
+ In this introductory section we make no attempt to be fully general; our
+ purpose is to convey the fundamental idea.
+ Choose a finite dimensional approximating space 
+\begin_inset Formula $U^{N}\subset U$
+\end_inset
+
+ and test function space 
+\begin_inset Formula $V^{N}\subset V$
+\end_inset
+
+, with bases 
+\begin_inset Formula $\left\{ \phi_{j}\right\} _{j=1}^{N}$
+\end_inset
+
+ and 
+\begin_inset Formula $\left\{ \psi_{i}\right\} _{i=1}^{N}$
+\end_inset
+
+ for 
+\begin_inset Formula $U$
+\end_inset
+
+ and 
+\begin_inset Formula $V$
+\end_inset
+
+ respectively.
+ We approximate the solution by
+\begin_inset Formula 
+\[
+u\left(x\right)=\sum_{j=1}^{N}u_{j}\phi_{j}\left(x\right).
+\]
+
+\end_inset
+
+From 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "long2004efficient"
+literal "false"
+
+\end_inset
+
+ and 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "long2010unified"
+literal "false"
+
+\end_inset
+
+ we know that the elements of the discrete residual 
+\begin_inset Formula $\mathbf{b}$
+\end_inset
+
+ and Jacobian 
+\begin_inset Formula $J$
+\end_inset
+
+ in a linearization of 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:weak-eqn"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ are computed as
+\begin_inset Formula 
+\begin{equation}
+b_{i}=\int_{\Omega}\pd{f}{v}\psi_{i}\,dx+\int_{\Omega}\pd{f}{v_{x}}\pd{\psi_{i}}{x}\,dx\label{eq:resid-bridge}
+\end{equation}
+
+\end_inset
+
+and
+\begin_inset Formula 
+\begin{equation}
+J_{ij}=\int_{\Omega}\pmix{f}{v}{u}\psi_{i}\phi_{j}\,dx+\int_{\Omega}\pmix{f}{v_{x}}{u}\pd{\psi_{i}}{x}\phi_{j}\,dx+\int_{\Omega}\pmix{f}{v}{u_{x}}\psi_{i}\pd{\phi_{j}}{x}\,dx+\int_{\Omega}\pmix{f}{v_{x}}{u_{x}}\pd{\psi_{i}}{x}\pd{\phi_{j}}{x}\,dx.\label{eq:jac-bridge}
+\end{equation}
+
+\end_inset
+
+One would then solve 
+\begin_inset Formula 
+\[
+J\delta\mathbf{u}=\mathbf{b}
+\]
+
+\end_inset
+
+for the Newton step 
+\begin_inset Formula $\delta\mathbf{u}$
+\end_inset
+
+ in the coefficients 
+\begin_inset Formula $u_{j}$
+\end_inset
+
+; if the PDE is linear then only one Newton step is needed.
+ 
+\end_layout
+
+\begin_layout Standard
+The coefficients in the integrand of the residual are the partials of 
+\begin_inset Formula $f$
+\end_inset
+
+ with respect to the test function and its derivatives.
+ The coefficients in the Jacobian are the mixed second partials of the 
+\begin_inset Formula $f$
+\end_inset
+
+ with respect to the test function, unknown function, and derivatives.
+ Note that in the Jacobian we encounter only those second partials with
+ one test function and one unknown function.
+ Since 
+\begin_inset Formula $f$
+\end_inset
+
+ is linear in 
+\begin_inset Formula $v$
+\end_inset
+
+ there can be no nonzero second partials such as 
+\begin_inset Formula $\pdd{f}{v}$
+\end_inset
+
+ or 
+\begin_inset Formula $\pmix{f}{v}{v_{x}}$
+\end_inset
+
+, and since at the top level we always need partials with respect to test
+ functions we can ignore partials such as 
+\begin_inset Formula $\pdd{f}{u}$
+\end_inset
+
+ and 
+\begin_inset Formula $\pmix{f}{u}{u_{x}}$
+\end_inset
+
+.
+ First partials on the unknown such as 
+\begin_inset Formula $\pd{f}{u}$
+\end_inset
+
+ and 
+\begin_inset Formula $\pd{f}{u_{x}}$
+\end_inset
+
+ won't be needed in the final residual calculation, but may be needed in
+ intermediate steps in the computation of second partials such as 
+\begin_inset Formula $\pmix{f}{v}{u}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Equations 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:resid-bridge"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ and 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:jac-bridge"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ connect the function 
+\begin_inset Formula $f$
+\end_inset
+
+ representing the PDE, the basis functions 
+\begin_inset Formula $\psi_{i}$
+\end_inset
+
+ and 
+\begin_inset Formula $\phi_{i}$
+\end_inset
+
+ representing the discretization, and elements of the residual vector and
+ Jacobian matrix in the linear system for the coefficients 
+\begin_inset Formula $u_{j}$
+\end_inset
+
+ (or, their Newton steps 
+\begin_inset Formula $\delta u_{j}$
+\end_inset
+
+ when the equation is nonlinear).
+ The evaluation of basis functions and formation of a sparse matrix are
+ the bread and butter of a finite element code (see, for example, 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "hughes2012finite"
+literal "false"
+
+\end_inset
+
+ or 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "gockenbach2006understanding"
+literal "false"
+
+\end_inset
+
+), and we don't discuss them further here.
+ We concentrate on the evaluation of the coefficients, for which the key
+ step is the evaluations of partials with respect to the test and unknown
+ functions and their spatial derivatives.
+ 
+\end_layout
+
+\begin_layout Section
+Approaches to coding these ideas
+\end_layout
+
+\begin_layout Subsection
+Code generation (FEniCS)
+\end_layout
+
+\begin_layout Standard
+The FEniCS project 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "logg2012automated"
+literal "false"
+
+\end_inset
+
+ uses compile-time automatic differentiation to generate source code to
+ evaluate the required partial derivatives.
+ and embed that code within integration loops that compute the required
+ discrete matrix and vector entries.
+ In principle, an optimizing compiler can turn the generated code into very
+ efficient machine code.
+ A disadvantage is that for complicated problems the generated code can
+ use a great deal of memory.
+ In his thesis 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "engwer2018partitioned"
+literal "false"
+
+\end_inset
+
+ on a complex equation set from micromagnetics, Josh Engwer found frequent
+ crashes from blowing out memory even on machines with 16-32 GB of RAM.
+ 
+\end_layout
+
+\begin_layout Subsection
+Runtime evaluation of an expression graph (Sundance)
+\end_layout
+
+\begin_layout Standard
+The Sundance project 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "long2010unified"
+literal "false"
+
+\end_inset
+
+ approaches the problem in a different way.
+ Code generation is not used.
+ Instead, an expression graph is built at runtime, and that graph is used
+ for evaluation of all necessary partial derivatives.
+ In a set of experiments with Poisson and Stokes problems with different
+ basis orders, it was found in 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "long2010unified"
+literal "false"
+
+\end_inset
+
+ that Sundance outperformed FEniCS in problem assembly speed by factors
+ of 2-5, and for large problems FEniCS crashed.
+ 
+\end_layout
+
+\begin_layout Standard
+So what's the catch? There are several:
+\end_layout
+
+\begin_layout Itemize
+Sundance is very intricate C++ code that's difficult to maintain.
+ Much of the complexity is in logic that could be done more easily and more
+ clearly in Python without a significant performance hit; certain core numerical
+ tasks should be still done in C/C++ called from Python via the 
+\family typewriter
+pybind
+\family default
+ code binding system.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Much of the complexity came from using an extended chain rule that mixed
+ spatial and functional differentiation.
+ In the revision, spatial differentiation is handled separately as a preprocessi
+ng step.
+ Hereafter, we assume that preprocessing has been done (I've already coded
+ it).
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Sundance wasn't designed for vector-valued basis functions, and the complexity
+ of adding them would require a substantial rewrite of the intricate C++
+ code.
+ Better to start fresh.
+ (Vector problems such as the Navier-Stokes and Maxwell equations could
+ be solved, but only by using aggregated scalar basis functions rather than
+ true vector bases.
+ This isn't a problem for Navier-Stokes, but causes severe limitations for
+ Maxwell.)
+\end_layout
+
+\begin_layout Itemize
+Sundance has some bugs in its most general evaluation functions.
+ These have shown up in a number of sufficiently complex PDEs.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Game plan
+\end_layout
+
+\begin_layout Itemize
+Reworking of evaluation engine in Python to handle scalar, vector, tensor,
+ and aggregate expressions
+\end_layout
+
+\begin_layout Itemize
+Connection of evaluation engine to FEM assembly system (meshes, basis functions,
+ DOF maps, discrete functions)
+\end_layout
+
+\begin_layout Itemize
+Plans:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Short term
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Expression analysis to identify evaluation requirements at each node
+\end_layout
+
+\begin_layout Itemize
+Pure Python evaluation; no calls to optimized C++
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+String evaluator: instead of doing numerical computation, evaluate to text
+ strings so we can check the output.
+ We can write to LaTeX string output for checking by eye, and Mathematica
+ input form output for checking against Mathematica
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Itemize
+Medium term:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+High-performance evaluation for scalar expressions (all that's needed for
+ Kohl's thesis).
+ Can re-use some existing Sundance code for this.
+ (Kohl/Lourdes/Harold)
+\end_layout
+
+\begin_layout Itemize
+Connection to FEM assembly system (meshes, basis functions, DOF maps, discrete
+ functions) (Kohl/Lourdes)
+\end_layout
+
+\begin_layout Itemize
+Investigate design of high-performance evaluation of vector/tensor/aggregate
+ expressions (Harold)
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Longer term:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Kohl: Apply to problems in mathematical biology
+\end_layout
+
+\begin_layout Itemize
+Harold: Build a system capable of doing a full micromagnetics problem w/o
+ blowing out memory 
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Standard
+\begin_inset Separator plain
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+How it works
+\end_layout
+
+\begin_layout Standard
+The first step is to understand how expressions are represented in graphs.
+ A simple example is shown in figure 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:expr-dag"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+; this is a graph representation of the expression
+\begin_inset Formula 
+\[
+f=\pd{v}{x}\pd{u}{x}+\pd{v}{x}\sin\left(u\right)+vu.
+\]
+
+\end_inset
+
+Each node in the graph represents a quantity to be computed in the evaluation
+ of 
+\begin_inset Formula $f$
+\end_inset
+
+.
+ The evaluation of 
+\begin_inset Formula $f$
+\end_inset
+
+ 
+\begin_inset Quotes eld
+\end_inset
+
+flows upwards
+\begin_inset Quotes erd
+\end_inset
+
+ as indicated in the arrows; the graph is therefore 
+\series bold
+directed
+\series default
+.
+ The graph is 
+\emph on
+almost
+\emph default
+ a tree; it fails to be a tree because the 
+\begin_inset Quotes eld
+\end_inset
+
+leafs
+\begin_inset Quotes erd
+\end_inset
+
+, the variables 
+\begin_inset Formula $v$
+\end_inset
+
+ and 
+\begin_inset Formula $u$
+\end_inset
+
+, are used in different evaluation paths.
+ In more complex expressions, it's possible to other nodes to be used in
+ different evaluation paths; this would be seen, for example, in an expression
+ such as
+\begin_inset Formula 
+\[
+\frac{x^{2}}{\sqrt{1+x^{2}}}
+\]
+
+\end_inset
+
+where the subexpression 
+\begin_inset Formula $x^{2}$
+\end_inset
+
+ is used twice.
+ Topologically, there are 
+\begin_inset Quotes eld
+\end_inset
+
+loops
+\begin_inset Quotes erd
+\end_inset
+
+ in the graph: for example, 
+\begin_inset Formula 
+\[
+E_{1}-E_{10}-E_{6}-E_{7}-E_{9}-E_{1}
+\]
+
+\end_inset
+
+forms a closed loop.
+ However, once 
+\emph on
+direction
+\emph default
+ of evaluation is accounted for, we see that this loop doesn't form a 
+\emph on
+cycle
+\emph default
+: information flows from 
+\begin_inset Formula $E_{1}$
+\end_inset
+
+ to 
+\begin_inset Formula $E_{10}$
+\end_inset
+
+ via two different paths rather than 
+\begin_inset Quotes eld
+\end_inset
+
+around the loop
+\begin_inset Quotes erd
+\end_inset
+
+.
+ This type of graph is called a 
+\series bold
+directed acyclic graph
+\emph on
+, 
+\series default
+\emph default
+or 
+\series bold
+DAG
+\series default
+ for short.
+ 
+\end_layout
+
+\begin_layout Standard
+With an expression's DAG in hand, we can evaluate 
+\begin_inset Formula $f$
+\end_inset
+
+ and any derivative numerically by proceeding upwards through the graph.
+ If only 
+\begin_inset Formula $f$
+\end_inset
+
+ itself is needed, then 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\noindent
+\align center
+\begin_inset Graphics
+	filename expr1.pdf
+	lyxscale 25
+	width 60text%
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:expr-dag"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Same graph, different contexts, different evaluation logic
+\end_layout
+
+\begin_layout Standard
+We've seen that the same expression may be evaluated differently in different
+ contexts.
+ We may compute a residual only, a Jacobian only, or both.
+ As a more complex example: in a PDE-constrained optimization problem with
+ Lagrangian 
+\begin_inset Formula $L\left(u,\lambda,\alpha\right)=F\left(u,\lambda,\alpha\right)-\lambda G\left(u,\alpha\right)$
+\end_inset
+
+, in different stages of an optimization algorithm we might evaluate 
+\begin_inset Formula $L$
+\end_inset
+
+ with 
+\begin_inset Formula $\lambda=0$
+\end_inset
+
+ to obtain the objective function, and in the process of evaluating derivatives
+ we will need to take variations with respect to 
+\begin_inset Formula $\lambda$
+\end_inset
+
+ to obtain a state equation for 
+\begin_inset Formula $u$
+\end_inset
+
+ given 
+\begin_inset Formula $\alpha$
+\end_inset
+
+, with respect to 
+\begin_inset Formula $u$
+\end_inset
+
+ to obtain an adjoint equation for 
+\begin_inset Formula $\lambda$
+\end_inset
+
+ given 
+\begin_inset Formula $u$
+\end_inset
+
+ and 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ , or with respect to 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ to obtain a design equation for 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ given 
+\begin_inset Formula $\lambda$
+\end_inset
+
+ and 
+\begin_inset Formula $u$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+It is therefore important to distinguish between an expression and its evaluatio
+n logic.
+ Since one expression can have multiple, context-dependent, evaluation procedure
+s, we will create for each context an 
+\series bold
+evaluator
+\series default
+, and store these in a dictionary that maps context to evalulator.
+ For example,
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "language=Python,tabsize=4"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+contextToEvalMap = {
+\end_layout
+
+\begin_layout Plain Layout
+
+	context1 : evaluator1,
+\end_layout
+
+\begin_layout Plain Layout
+
+	context2 : evaluator2
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Propagating derivatives
+\end_layout
+
+\begin_layout Standard
+Let 
+\begin_inset Formula $f$
+\end_inset
+
+ be a node in the DAG that depends on 
+\begin_inset Formula $N$
+\end_inset
+
+ direct predecessor nodes 
+\begin_inset Formula $a_{1},a_{2},\cdots,a_{N}$
+\end_inset
+
+.
+ The 
+\begin_inset Quotes eld
+\end_inset
+
+direct predecessors
+\begin_inset Quotes erd
+\end_inset
+
+ are those nodes connected to node 
+\begin_inset Formula $f$
+\end_inset
+
+ by single edges pointing upwards to 
+\begin_inset Formula $f$
+\end_inset
+
+.
+ For example, in our graph 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:expr-dag"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+, node 
+\begin_inset Formula $E_{7}$
+\end_inset
+
+ has direct predecessors 
+\begin_inset Formula $E_{8}$
+\end_inset
+
+ and 
+\begin_inset Formula $E_{9}$
+\end_inset
+
+.
+ Values at nodes are evaluated numerically by carrying out the specified
+ operation on the results from their predecessor nodes.
+ However, we also need derivatives: 
+\begin_inset Formula $\pd{f}{u}$
+\end_inset
+
+, 
+\begin_inset Formula $\pmix{f}{u}{v}$
+\end_inset
+
+ and so on.
+ These are propagated up from predecessors using the chain rule.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Notation for functional derivatives
+\end_layout
+
+\begin_layout Standard
+We'll encounter derivatives of expressions with respect to functions and
+ their spatial derivatives, such as
+\begin_inset Formula 
+\[
+\pd{f}{u},\;\;\pd{f}{\pd{u}{y}},\;\;\pd{f}{\nabla\times\mathbf{v}}\;\;\text{or}\;\;\pmix{f}{v}{\pd{u}{x}}.
+\]
+
+\end_inset
+
+If you've seen Lagrangian mechanics (see 
+\emph on
+e.g.
+
+\emph default
+ 
+\begin_inset CommandInset citation
+LatexCommand cite
+key "landau1960mechanics,thornton2021classical,hand2000analytical"
+literal "false"
+
+\end_inset
+
+), this idea of differentiating with respect to derivatives of functions
+ will be familiar.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+The chain rule for scalar-valued functions of scalar arguments and variables
+\end_layout
+
+\begin_layout Standard
+The simplest case gives the main idea.
+ Let 
+\begin_inset Formula $f$
+\end_inset
+
+ depend on 
+\begin_inset Formula $N$
+\end_inset
+
+ arguments 
+\begin_inset Formula $a_{1},a_{2},\cdots,a_{N}$
+\end_inset
+
+, and consider differentiation with respect to 
+\begin_inset Formula $M$
+\end_inset
+
+ variables 
+\begin_inset Formula $u_{1},u_{2},\cdots,u_{M}$
+\end_inset
+
+.
+ Keep in mind that the differentiation variables 
+\begin_inset Formula $u_{1}$
+\end_inset
+
+, etc, might be functions, spatial derivatives of functions, or design parameter
+s.
+ We'll use mid-range Greek letters 
+\begin_inset Formula $\lambda,\mu,\nu$
+\end_inset
+
+ for argument indices, and enumerate differentiation varables 
+\begin_inset Formula $u,v,w$
+\end_inset
+
+ explicitly.
+ The first derivative of 
+\begin_inset Formula $f$
+\end_inset
+
+ is
+\begin_inset Formula 
+\[
+\pd{f}{u}=\sum_{\lambda=1}^{N}\pd{f}{a_{\lambda}}\pd{a_{\lambda}}{u}.
+\]
+
+\end_inset
+
+The second derivative (mixed partial with respect to 
+\begin_inset Formula $u$
+\end_inset
+
+ and 
+\begin_inset Formula $v$
+\end_inset
+
+) is 
+\begin_inset Formula 
+\[
+\pmix{f}{u}{v}=\sum_{\lambda=1}^{N}\pd{f}{a_{\lambda}}\,\pmix{a_{\lambda}}{u}{v}+\sum_{\lambda=1}^{N}\sum_{\mu=1}^{N}\pmix{f}{a_{\lambda}}{a_{\mu}}\,\pd{a_{\lambda}}{u}\,\pd{a_{\mu}}{v}.
+\]
+
+\end_inset
+
+The first and second derivatives are sufficient for linear and nonlinear
+ forward PDE problems.
+ In sensitivity analysis (including direct sensitivities in gradient-based
+ optimization) and eigenvalue problems, a third derivative is also needed.
+ The chain rule for the third derivative is
+\begin_inset Formula 
+\begin{multline*}
+\frac{{\partial^{3}f}}{\partial u\partial v\partial w}=\sum_{\lambda=1}^{N}\pd{f}{a_{\lambda}}\,\frac{{\partial^{3}a_{\lambda}}}{\partial u\partial v\partial w}+\\
++\sum_{\lambda=1}^{N}\sum_{\mu=1}^{N}\pmix{f}{a_{\lambda}}{a_{\mu}}\left[\pmix{a_{\lambda}}{u}{v}\,\pd{a_{\mu}}{w}+\pmix{a_{\lambda}}{u}{w}\,\pd{a_{\mu}}{v}+\pmix{a_{\lambda}}{v}{w}\,\pd{a_{\mu}}{u}\right]\\
++\sum_{\lambda=1}^{N}\sum_{\mu=1}^{N}\sum_{\nu=1}^{N}\frac{{\partial^{3}f}}{\partial a_{\lambda}\partial a_{\mu}\partial a_{\nu}}\,\pd{a_{\lambda}}{u}\,\pd{a_{\mu}}{v}\,\pd{a_{\nu}}{w}.
+\end{multline*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+The chain rule for tensor-valued functions of tensor arguments and variables
+\end_layout
+
+\begin_layout Standard
+Let 
+\begin_inset Formula $I,J,K,\cdots$
+\end_inset
+
+ be integer multiindices 
+\begin_inset Formula $I=\left(i_{1},i_{2},\cdots,i_{m}\right)$
+\end_inset
+
+ and so on.
+ It may be that 
+\begin_inset Formula $\dim\left(I\right)\ne\dim\left(J\right)$
+\end_inset
+
+.
+ If 
+\begin_inset Formula $\dim\left(I\right)=0,1,$
+\end_inset
+
+ or 
+\begin_inset Formula $2$
+\end_inset
+
+ then an object indexed by 
+\begin_inset Formula $I$
+\end_inset
+
+ is a scalar, vector, or 2-tensor respectively.
+ Tensors of higher order will be encountered.
+ Let 
+\begin_inset Formula $f_{I}$
+\end_inset
+
+, 
+\begin_inset Formula $u_{J}$
+\end_inset
+
+, 
+\begin_inset Formula $v_{K}$
+\end_inset
+
+, and 
+\begin_inset Formula $w_{K}$
+\end_inset
+
+ be tensor-valued quantities; 
+\begin_inset Formula $f_{I}$
+\end_inset
+
+ is a tensor of order 
+\begin_inset Formula $\dim\left(I\right)$
+\end_inset
+
+, and so on.
+ We're concerned with the multivariate, multi-argument chain rule for a
+ tensor-valued function 
+\begin_inset Formula $f$
+\end_inset
+
+ of tensor-valued arguments 
+\begin_inset Formula $a_{1},a_{2},\cdots,a_{N}$
+\end_inset
+
+ and tensor variables 
+\begin_inset Formula $u$
+\end_inset
+
+, 
+\begin_inset Formula $v,\cdots$
+\end_inset
+
+, written as
+\begin_inset Formula 
+\[
+f_{I}\left(a_{1}\left(u_{J},v_{K},\cdots\right),a_{2}\left(u_{J},v_{K},\cdots\right),\cdots,a_{n}\left(u_{J},v_{K},\cdots\right)\right).
+\]
+
+\end_inset
+
+We'll use Greek letters 
+\begin_inset Formula $\lambda,\mu,\nu,\cdots$
+\end_inset
+
+ for argument indices; these are natural numbers.
+ The first partial of 
+\begin_inset Formula $f$
+\end_inset
+
+ with respect to 
+\begin_inset Formula $u$
+\end_inset
+
+ is
+\begin_inset Formula 
+\[
+\pd{f_{I}}{u_{J}}=\sum_{\lambda=1}^{N}\pd{f_{I}}{a_{\lambda}}\pd{a_{\lambda}}{u_{J}}.
+\]
+
+\end_inset
+
+Let's unpack this.
+ The result is a tensor of order 
+\begin_inset Formula $\dim\left(I\right)+\dim\left(J\right)$
+\end_inset
+
+.
+ For example, if 
+\begin_inset Formula $f$
+\end_inset
+
+ and 
+\begin_inset Formula $u$
+\end_inset
+
+ are scalars, then the result is a scalar; if one of 
+\begin_inset Formula $f$
+\end_inset
+
+ and 
+\begin_inset Formula $u$
+\end_inset
+
+ is a vector and the other a scalar, than the result is a vector; if 
+\begin_inset Formula $f$
+\end_inset
+
+ and 
+\begin_inset Formula $u$
+\end_inset
+
+ are vectors, the result is a 2-tensor (
+\emph on
+i.e.
+\emph default
+, a matrix), and so on.
+ What about the tensor structure of the argument 
+\begin_inset Formula $a_{\lambda}$
+\end_inset
+
+? It's irrelevant to this formula, because we interpret the operation
+\begin_inset Formula 
+\begin{equation}
+\pd{f_{I}}{a_{\lambda}}\pd{a_{\lambda}}{u_{J}}\label{eq:contraction}
+\end{equation}
+
+\end_inset
+
+to represent contraction over all the indices of 
+\begin_inset Formula $a$
+\end_inset
+
+ in the tensors
+\begin_inset Formula 
+\[
+\pd{f_{I}}{a_{\lambda}}\;\;\text{and\;\;}\pd{a_{\lambda}}{u_{I}}.
+\]
+
+\end_inset
+
+Important: the index 
+\begin_inset Formula $\lambda$
+\end_inset
+
+ is 
+\series bold
+not
+\series default
+ a tensor index, it's the integer index of the argument 
+\begin_inset Formula $a$
+\end_inset
+
+ in the list of arguments of 
+\begin_inset Formula $f$
+\end_inset
+
+.
+ The tensor indices of 
+\begin_inset Formula $a_{\lambda}$
+\end_inset
+
+ aren't shown here, and don't need to be since we understand implicitly
+ that they're to be contracted away when performing the operation in equation
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:contraction"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Using the conventions described above, we next write out the chain rules
+ for second and third partials,
+\begin_inset Formula 
+\[
+\pmix{f_{I}}{u_{J}}{v_{K}}=\sum_{\lambda=1}^{N}\pd{f_{I}}{a_{\lambda}}\,\pmix{a_{\lambda}}{u_{J}}{v_{K}}+\sum_{\lambda=1}^{N}\sum_{\mu=1}^{N}\pmix{f_{I}}{a_{\lambda}}{a_{\mu}}\,\pd{a_{\lambda}}{u_{J}}\pd{a_{\mu}}{v_{K}}
+\]
+
+\end_inset
+
+and
+\begin_inset Formula 
+\begin{multline*}
+\frac{{\partial^{3}F_{I}}}{\partial u_{J}\partial v_{K}\partial w_{L}}=\sum_{\lambda=1}^{N}\pd{f_{I}}{a_{\lambda}}\,\frac{{\partial^{3}a_{\lambda}}}{\partial u_{J}\partial v_{K}\partial w_{L}}+\\
++\sum_{\lambda=1}^{N}\sum_{\mu=1}^{N}\pmix{f_{I}}{a_{\lambda}}{a_{\mu}}\,\left[\pmix{a_{\lambda}}{u_{J}}{v_{K}}\,\pd{a_{\mu}}{w_{L}}+\pmix{a_{\lambda}}{u_{J}}{w_{L}}\,\pd{a_{\mu}}{v_{K}}+\pmix{a_{\lambda}}{v_{K}}{w_{L}}\,\pd{a_{\mu}}{u_{J}}\right]\\
++\sum_{\lambda=1}^{N}\sum_{\mu=1}^{N}\sum_{\nu=1}^{N}\frac{{\partial^{3}f_{I}}}{\partial a_{\lambda}\partial a_{\mu}\partial a_{\mu}}\,\pd{a_{\lambda}}{u_{J}}\,\pd{a_{\mu}}{v_{K}}\,\pd{a_{\nu}}{w_{L}}
+\end{multline*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+What to compute (or not)
+\end_layout
+
+\begin_layout Standard
+Given an integrand in a weak form, we need certain partial derivatives in
+ order to form vectors and matrices with operations such as those in equations
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:resid-bridge"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ and 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:jac-bridge"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+ Let 
+\begin_inset Formula $g$
+\end_inset
+
+ be an expression depending directly on 
+\begin_inset Formula $N$
+\end_inset
+
+ arguments 
+\begin_inset Formula $a_{1},a_{2},\cdots,a_{N}$
+\end_inset
+
+.
+ For purposes of this section the tensor structure of 
+\begin_inset Formula $g$
+\end_inset
+
+, its arguments, and the variables 
+\begin_inset Formula $u$
+\end_inset
+
+, 
+\begin_inset Formula $v$
+\end_inset
+
+, etc are irrelevant, so we treat all variables as scalars.
+ 
+\end_layout
+
+\begin_layout Standard
+Throughout this section, an expression being 
+\begin_inset Quotes eld
+\end_inset
+
+zero
+\begin_inset Quotes erd
+\end_inset
+
+ or 
+\begin_inset Quotes eld
+\end_inset
+
+nonzero
+\begin_inset Quotes erd
+\end_inset
+
+ refers to whether that expression is 
+\emph on
+structurally
+\emph default
+ zero or nonzero.
+ For example, if 
+\begin_inset Formula $g\left(a_{1},a_{2}\right)=a_{1}a_{2}$
+\end_inset
+
+, then 
+\begin_inset Formula $\pd{g}{a_{1}}=a_{2}$
+\end_inset
+
+ which will be nonzero except when 
+\begin_inset Formula $a_{2}=0$
+\end_inset
+
+; since it's zero only for special values of the arguments, we call it structura
+lly nonzero.
+ However, 
+\begin_inset Formula $\pdd{g}{a_{1}}$
+\end_inset
+
+ is
+\emph on
+ 
+\emph default
+zero for all arguments, so we call it structurally zero.
+ 
+\end_layout
+
+\begin_layout Standard
+Define the following sets.
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $A_{d}\left(g\right)$
+\end_inset
+
+ is the set of nonzero 
+\begin_inset Formula $d$
+\end_inset
+
+-th order partial derivatives 
+\emph on
+available
+\emph default
+ from 
+\begin_inset Formula $g$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Example: if 
+\begin_inset Formula $g=uv+vu_{x}$
+\end_inset
+
+, then 
+\begin_inset Formula $A_{1}\left(g\right)=\left\{ \pd{}{u},\pd{}{v},\pd{}{u_{x}}\right\} $
+\end_inset
+
+ and 
+\begin_inset Formula $A_{2}\left(g\right)=\left\{ \pmix{}{u}{v},\pmix{}{u}{v_{x}}\right\} $
+\end_inset
+
+.
+ Note that 
+\begin_inset Formula $A_{1}\left(g\right)$
+\end_inset
+
+ doesn't contain 
+\begin_inset Formula $\pd{}{v_{x}}$
+\end_inset
+
+, and 
+\begin_inset Formula $A_{2}\left(g\right)$
+\end_inset
+
+ doesn't contain 
+\begin_inset Formula $\pdd{}{v}$
+\end_inset
+
+, 
+\begin_inset Formula $\pdd{}{u}$
+\end_inset
+
+, and so on.
+ 
+\end_layout
+
+\begin_layout Itemize
+We can write sets of partials compactly by simply listing the differentiation
+ variables, for example, 
+\begin_inset Formula $\left\{ u,v,u_{x}\right\} $
+\end_inset
+
+ instead of 
+\begin_inset Formula $\left\{ \pd{}{u},\pd{}{v},\pd{}{u_{x}}\right\} $
+\end_inset
+
+, and 
+\begin_inset Formula $\left\{ \left(u,v\right),\left(u,v_{x}\right)\right\} $
+\end_inset
+
+ instead of 
+\begin_inset Formula $\left\{ \pmix{}{u}{v},\pmix{}{u}{v_{x}}\right\} $
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+\begin_inset Formula $R_{d}\left(g\right)$
+\end_inset
+
+ is the set of nonzero 
+\begin_inset Formula $d$
+\end_inset
+
+-th order partial derivatives 
+\emph on
+required
+\emph default
+ from 
+\begin_inset Formula $g$
+\end_inset
+
+ in order to compute whatever quantities are needed from 
+\begin_inset Formula $g$
+\end_inset
+
+ or its successors.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+In calculation of a residual vector given an integrand 
+\begin_inset Formula $f$
+\end_inset
+
+, no second partials are needed, so 
+\begin_inset Formula $R_{2}\left(f\right)=\emptyset$
+\end_inset
+
+.
+ With 
+\begin_inset Formula $f=uvq\left(x\right)+vp\left(x\right)+v_{x}u_{x}$
+\end_inset
+
+, then 
+\begin_inset Formula $R_{1}\left(f\right)=\left\{ \pd{}{v},\pd{}{v_{x}}\right\} $
+\end_inset
+
+.
+ When computing a Jacobian, we'll have 
+\begin_inset Formula $R_{2}\left(f\right)=\left\{ \pmix{}{u}{v},\pmix{}{u_{x}}{v_{x}}\right\} $
+\end_inset
+
+.
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+When determining 
+\begin_inset Formula $A_{d}$
+\end_inset
+
+, we work from predecessor to successor (bottom to top) in the expression
+ graph, ending up at the final expression to be computed.
+ When determining 
+\begin_inset Formula $R_{d}$
+\end_inset
+
+, we work from the final expression (where we know what quantities are required)
+ backwards to the predecessors.
+ 
+\end_layout
+
+\begin_layout Standard
+Some sets that will help in this process are
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $Q_{d}\left(g\right)$
+\end_inset
+
+ is the set of 
+\begin_inset Formula $d$
+\end_inset
+
+-tuples of integers 
+\begin_inset Formula $\left(\lambda_{1},\lambda_{2},\cdots,\lambda_{d}\right)$
+\end_inset
+
+ such that the partial derivative
+\begin_inset Formula 
+\[
+\frac{{\partial^{d}g}}{\partial a_{\lambda_{1}}\partial a_{\lambda_{2}}\cdots\partial a_{\lambda_{d}}}
+\]
+
+\end_inset
+
+is structurally nonzero.
+ We don't reduce over permutations; for example, the pairs 
+\begin_inset Formula $\left(1,2\right)$
+\end_inset
+
+ and 
+\begin_inset Formula $\left(2,1\right)$
+\end_inset
+
+ are both counted.
+ In general, if 
+\begin_inset Formula $g$
+\end_inset
+
+ depends on 
+\begin_inset Formula $n$
+\end_inset
+
+ arguments then 
+\begin_inset Formula $Q_{1}\left(g\right)$
+\end_inset
+
+ will be 
+\begin_inset Formula $\left\{ 1,2,\cdots,n\right\} $
+\end_inset
+
+.
+ Sets for higher-order derivatives will depend on the functional dependence
+ of 
+\begin_inset Formula $g$
+\end_inset
+
+ upon its arguments.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Example: When 
+\begin_inset Formula $g$
+\end_inset
+
+ is a linear operator on the arguments, then 
+\begin_inset Formula $Q_{d}\left(g\right)=\emptyset$
+\end_inset
+
+ for 
+\begin_inset Formula $d>1$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+Example: When 
+\begin_inset Formula $g$
+\end_inset
+
+ is a product of two arguments, 
+\begin_inset Formula $g=a_{1}a_{2}$
+\end_inset
+
+, then 
+\begin_inset Formula $Q_{2}\left(g\right)=\left\{ \left(1,2\right),\left(2,1\right)\right\} $
+\end_inset
+
+ and 
+\begin_inset Formula $Q_{d}\left(g\right)=\emptyset$
+\end_inset
+
+ for 
+\begin_inset Formula $d>2$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+Example: When 
+\begin_inset Formula $g$
+\end_inset
+
+ is an unspecified nonlinear function of two arguments, then 
+\begin_inset Formula $Q_{2}\left(g\right)=\left\{ \left(1,1\right),\left(1,2\right),\left(2,1\right),\left(2,2\right)\right\} $
+\end_inset
+
+ and 
+\begin_inset Formula 
+\[
+Q_{3}\left(g\right)=\left\{ \left(1,1,1\right),\left(1,1,2\right),\left(1,2,1\right),\left(1,2,2\right),\left(2,1,1\right),\left(2,1,2\right),\left(2,2,1\right),\left(2,2,2\right)\right\} .
+\]
+
+\end_inset
+
+In this case, 
+\begin_inset Formula $Q_{d}\left(g\right)$
+\end_inset
+
+ will contain all 
+\begin_inset Formula $2^{d}$
+\end_inset
+
+ tuples with members 1 and 2.
+ In a 3-argument nonlinear function, we'd have 
+\begin_inset Formula $3^{d}$
+\end_inset
+
+ tuples, and so on.
+ 
+\end_layout
+
+\begin_layout Standard
+Let 
+\begin_inset Formula $Q_{d}\left(g,\ell\right)$
+\end_inset
+
+ be the 
+\begin_inset Formula $\ell$
+\end_inset
+
+-th 
+\begin_inset Formula $d$
+\end_inset
+
+-tuple in 
+\begin_inset Formula $Q_{d}\left(g,\ell\right)$
+\end_inset
+
+, and 
+\begin_inset Formula $Q_{d}\left(g,\ell,j\right)$
+\end_inset
+
+ be the 
+\begin_inset Formula $j$
+\end_inset
+
+-th argument index in 
+\begin_inset Formula $Q_{d}\left(g,\ell\right)$
+\end_inset
+
+.
+ We'll write 
+\begin_inset Formula $D_{Q_{d}\left(g,\ell\right)}g$
+\end_inset
+
+ for
+\begin_inset Formula 
+\[
+\frac{{\partial^{d}g}}{\partial a_{Q_{d}\left(g,\ell,1\right)}\partial a_{Q_{d}\left(g,\ell,2\right)}\cdots\,\partial a_{Q\left(g,\ell,d\right)}.}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Let 
+\begin_inset Formula $p$
+\end_inset
+
+ be a mixed partial of order 
+\begin_inset Formula $m$
+\end_inset
+
+ such as 
+\begin_inset Formula 
+\[
+\frac{{\partial^{m}}}{\partial u_{1}\partial u_{2}\cdots\partial u_{m}}.
+\]
+
+\end_inset
+
+We'll represent this compactly as the sorted 
+\begin_inset Formula $m$
+\end_inset
+
+-tuple 
+\begin_inset Formula $\left(u_{1},\cdots,u_{m}\right)$
+\end_inset
+
+, and also with the notation 
+\begin_inset Formula $D_{p}$
+\end_inset
+
+.
+ Then the map 
+\begin_inset Formula $F\left(p,n\right)$
+\end_inset
+
+ is defined as
+\begin_inset Formula 
+\[
+F\left(p,n\right)=\begin{cases}
+\text{arrangements of }p\text{ into \ensuremath{n} non-empty boxes} & 1\le n\le m\\
+\text{\ensuremath{\emptyset}} & \text{otherwise}
+\end{cases}
+\]
+
+\end_inset
+
+where here we 
+\emph on
+do
+\emph default
+ reduce over permutations.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Example: 
+\begin_inset Formula $p=\left(u\right)$
+\end_inset
+
+: 
+\begin_inset Formula $F\left(p,1\right)=\left\{ \left(u\right)\right\} $
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Example: 
+\begin_inset Formula $p=\left(u,v\right)$
+\end_inset
+
+: 
+\begin_inset Formula $F\left(p,1\right)=\left\{ \left(u,v\right)\right\} $
+\end_inset
+
+, 
+\begin_inset Formula $F\left(p,2\right)=\left\{ \left(\left(u\right),\left(v\right)\right)\right\} $
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Example: 
+\begin_inset Formula $p=\left(u,v,w\right)$
+\end_inset
+
+:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+\begin_inset Formula $F\left(p,1\right)=\left\{ \left(u,v,w\right)\right\} $
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $F\left(p,2\right)=\left\{ \left(\left(u\right),\left(v,w\right)\right),\left(\left(u,v\right),\left(w\right)\right),\left(\left(u,v\right),\left(w\right)\right)\right\} $
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $F\left(p,3\right)=\left\{ \left(\left(u\right),\left(v\right),\left(w\right)\right)\right\} $
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+To identify a particular 
+\begin_inset Formula $n$
+\end_inset
+
+-tuple in 
+\begin_inset Formula $F$
+\end_inset
+
+, we write 
+\begin_inset Formula $F\left(p,n,k\right)$
+\end_inset
+
+ for the 
+\begin_inset Formula $k$
+\end_inset
+
+-th 
+\begin_inset Formula $n$
+\end_inset
+
+-tuple of partials in 
+\begin_inset Formula $F\left(p,n\right)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+Example: with 
+\begin_inset Formula $p=\left(u,v,w\right)$
+\end_inset
+
+, we have 
+\begin_inset Formula $F\left(p,2,1\right)=\left(\left(u\right),\left(v,w\right)\right)$
+\end_inset
+
+ and 
+\begin_inset Formula $F\left(p,2,3\right)=\left(\left(u,v\right),w\right)$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Finally, 
+\begin_inset Formula $F\left(p,n,k,j\right)$
+\end_inset
+
+ is the 
+\begin_inset Formula $j$
+\end_inset
+
+-th partial in 
+\begin_inset Formula $F\left(p,n,k\right)$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Itemize
+Example: with 
+\begin_inset Formula $p=\left(u,v,w\right)$
+\end_inset
+
+, we have 
+\begin_inset Formula $F\left(p,2,1,1\right)=\left(u\right)$
+\end_inset
+
+ and 
+\begin_inset Formula $F\left(p,2,1,2\right)=\left(v,w\right)$
+\end_inset
+
+.
+ Then
+\begin_inset Formula 
+\[
+D_{F\left(p,2,1,1\right)}g=\pd{g}{u}
+\]
+
+\end_inset
+
+and
+\begin_inset Formula 
+\[
+D_{F\left(p,2,1,2\right)}=\pmix{g}{v}{w}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Standard
+\begin_inset Separator plain
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In the notation defined above, the chain rule is written out as
+\begin_inset Formula 
+\[
+D_{p}g=\sum_{n=1}^{\left|p\right|}\sum_{\ell=1}^{\left|Q_{n}\left(g\right)\right|}D_{Q_{n}\left(g,\ell\right)}g\;\sum_{k=1}^{\left|F\left(p,n\right)\right|}\prod_{j=1}^{\left|F\left(p,n,k\right)\right|}D_{F\left(p,n,k,j\right)}a_{Q_{n}\left(g,\ell,j\right)}.
+\]
+
+\end_inset
+
+Pseudocode for straightforward evaluation is in algorithm 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "alg:chain-eval"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float algorithm
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\begin_inset ERT
+status open
+
+\begin_layout Plain Layout
+
+
+\backslash
+begin{algorithmic}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State Initialize $D_p g
+\backslash
+gets 0$.
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State Find $F(p)$.
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+For {$n = 1$ to $
+\backslash
+vert p 
+\backslash
+vert$}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State Find $Q_n(g)$
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+For {$q_
+\backslash
+ell 
+\backslash
+in Q_n(g)$}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State Compute $D_{q_
+\backslash
+ell} g$
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State Initialize $
+\backslash
+mathrm{tmp}_1
+\backslash
+gets 0$
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+For {$f_k 
+\backslash
+in F(p,n)$}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State $
+\backslash
+mathrm{tmp}_2 
+\backslash
+gets 1$
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+For {$f_{k,j} 
+\backslash
+in f_k$}
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State $
+\backslash
+mathrm{tmp}_2 
+\backslash
+gets 
+\backslash
+mathrm{tmp}_2 * D_{f_{k,j}} a_{q_{
+\backslash
+ell,j}}$
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+EndFor
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State $
+\backslash
+mathrm{tmp}_1 
+\backslash
+gets 
+\backslash
+mathrm{tmp}_1 + 
+\backslash
+mathrm{tmp}_2$
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+EndFor
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State $D_p g 
+\backslash
+gets D_p g + 
+\backslash
+mathrm{tmp}_1 * D_{q_
+\backslash
+ell} g$
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+EndFor%
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+EndFor%
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+State Return $D_p g$
+\end_layout
+
+\begin_layout Plain Layout
+
+
+\backslash
+end{algorithmic}
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+\begin_inset CommandInset label
+LatexCommand label
+name "alg:chain-eval"
+
+\end_inset
+
+Evaluation of chain rule
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Determination of available set 
+\begin_inset Formula $A_{d}\left(g\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Case 
+\begin_inset Formula $d=0$
+\end_inset
+
+: It's assumed that every node is structurally nonzero, so that 
+\begin_inset Formula $A_{d}\left(g\right)=\left\{ I\right\} $
+\end_inset
+
+ where 
+\begin_inset Formula $I$
+\end_inset
+
+ is the identity operator 
+\begin_inset Formula $Ig=g$
+\end_inset
+
+, that is, the zeroth order partial of 
+\begin_inset Formula $g$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+Case 
+\begin_inset Formula $d=1$
+\end_inset
+
+: Refer to the chain rule
+\begin_inset Formula 
+\[
+\pd{g}{u}=\sum_{\lambda=1}^{n}\pd{g}{a_{\lambda}}\pd{a_{\lambda}}{u}.
+\]
+
+\end_inset
+
+The The quantity 
+\begin_inset Formula $\pd{g}{u}$
+\end_inset
+
+ will be structurally nonzero if, for some 
+\begin_inset Formula $\lambda$
+\end_inset
+
+, 
+\begin_inset Formula $\pd{g}{a_{\lambda}}$
+\end_inset
+
+ is structurally nonzero and 
+\begin_inset Formula $\pd{}{u}\in A_{1}\left(a_{\lambda}\right)$
+\end_inset
+
+.
+ For first derivatives, we can always assume that 
+\begin_inset Formula $\pd{g}{a_{\lambda}}$
+\end_inset
+
+ is structurally nonzero for each 
+\begin_inset Formula $\lambda$
+\end_inset
+
+, so we then have
+\begin_inset Formula 
+\begin{equation}
+A_{1}\left(g\right)=\bigcup_{\lambda=1}^{n}A_{1}\left(a_{\lambda}\right),\label{eq:A1-general}
+\end{equation}
+
+\end_inset
+
+or, equivalently,
+\begin_inset Formula 
+\[
+A_{1}\left(g\right)=\bigcup_{\lambda\in Q_{1}\left(g\right)}A_{1}\left(a_{\lambda}\right).
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Case 
+\begin_inset Formula $d=2$
+\end_inset
+
+: Refer again to the chain rule,
+\begin_inset Formula 
+\[
+\pmix{g}{u}{v}=\sum_{\lambda=1}^{n}\pd{g}{a_{\lambda}}\pmix{a_{\lambda}}{u}{v}+\sum_{\lambda=1}^{n}\sum_{\mu=1}^{n}\pmix{g}{a_{\lambda}}{a_{\mu}}\,\pd{a_{\lambda}}{u}\,\pd{a_{\mu}}{v}.
+\]
+
+\end_inset
+
+The first sum is dealt with as in the first-order case: it will be nonzero
+ if for some 
+\begin_inset Formula $\lambda$
+\end_inset
+
+ we have 
+\begin_inset Formula $\pmix{a_{\lambda}}{u}{v}$
+\end_inset
+
+ nonzero.
+ For the second sum, we find that 
+\begin_inset Formula 
+\[
+\pmix{g}{a_{\lambda}}{a_{\mu}}\,\pd{a_{\lambda}}{u}\,\pd{a_{\mu}}{v}
+\]
+
+\end_inset
+
+is nonzero if 
+\begin_inset Formula $\left(\lambda,\mu\right)\in Q_{1}\left(g\right)$
+\end_inset
+
+ and 
+\begin_inset Formula $\pd{}{u}\in A_{1}\left(a_{\lambda}\right)$
+\end_inset
+
+ and 
+\begin_inset Formula $\pd{}{v}\in A_{1}\left(a_{\mu}\right)$
+\end_inset
+
+.
+ Turn these logical statements into set operations to find
+\begin_inset Formula 
+\begin{equation}
+A_{2}\left(g\right)=\left[\bigcup_{\lambda\in Q_{1}\left(g\right)}A_{2}\left(a_{\lambda}\right)\right]\;\bigcup\;\left[\bigcup_{\left(\lambda,\mu\right)\in Q_{2}\left(g\right)}A_{1}\left(a_{\lambda}\right)\otimes A_{1}\left(a_{\mu}\right)\right],\label{eq:A2-general}
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $\otimes$
+\end_inset
+
+ is the Cartesian product operator.
+\end_layout
+
+\begin_layout Itemize
+Case 
+\begin_inset Formula $d=3$
+\end_inset
+
+: Proceed similarly to find
+\size footnotesize
+
+\begin_inset Formula 
+\begin{equation}
+A_{3}\left(g\right)=\left[\bigcup_{\lambda=1}^{n}A_{3}\left(a_{\lambda}\right)\right]\bigcup\left[\bigcup_{\left(\lambda,\mu\right)\in Q_{2}\left(g\right)}A_{1}\left(a_{\lambda}\right)\otimes A_{2}\left(a_{\mu}\right)\right]\bigcup\left[\bigcup_{\left(\lambda,\mu,\nu\right)\in Q_{3}\left(g\right)}A_{1}\left(a_{\lambda}\right)\otimes A_{1}\left(a_{\mu}\right)\otimes A_{1}\left(a_{\nu}\right)\right].\label{eq:A3-general}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Notice that in all cases, 
+\begin_inset Formula $A_{d}$
+\end_inset
+
+ depends on 
+\begin_inset Formula $A_{d-1}$
+\end_inset
+
+, 
+\begin_inset Formula $A_{d-2}$
+\end_inset
+
+, and so on; therefore we must first compute 
+\begin_inset Formula $A_{1}$
+\end_inset
+
+, then 
+\begin_inset Formula $A_{2}$
+\end_inset
+
+, then 
+\begin_inset Formula $A_{3}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Now we consider some special cases.
+ 
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+A linear operation.
+
+\series default
+ When 
+\begin_inset Formula $g\left(a_{1},a_{2},\cdots,a_{n}\right)$
+\end_inset
+
+ is linear, we have 
+\begin_inset Formula $Q_{1}\left(g\right)=\left\{ 1,2,\cdots,n\right\} $
+\end_inset
+
+ as always, and then 
+\begin_inset Formula $Q_{d}\left(g\right)=\emptyset$
+\end_inset
+
+ for all 
+\begin_inset Formula $d>1$
+\end_inset
+
+.
+ Then, for all 
+\begin_inset Formula $d$
+\end_inset
+
+ we find
+\begin_inset Formula 
+\[
+A_{d}\left(g\right)=\bigcup_{\lambda=1}^{n}A_{d}\left(a_{\lambda}\right).
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+A nonlinear unary operation
+\series default
+.
+ Without further information about 
+\begin_inset Formula $g$
+\end_inset
+
+ we can only assume that 
+\begin_inset Formula $g^{\left(d\right)}\left(a\right)$
+\end_inset
+
+ is structurally nonzero for all 
+\begin_inset Formula $d\ge0.$
+\end_inset
+
+ Then 
+\begin_inset Formula $Q_{d}\left(g\right)=\left\{ 1\right\} $
+\end_inset
+
+, and the available sets are
+\begin_inset Formula 
+\[
+A_{1}\left(g\right)=A_{1}\left(a\right)
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+A_{2}\left(a\right)=A_{2}\left(a\right)\bigcup\left(A_{1}\left(a\right)\otimes A_{1}\left(a\right)\right)
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+A_{3}\left(a\right)=A_{3}\left(a\right)\bigcup\left(A_{1}\left(a\right)\otimes A_{2}\left(a\right)\right)\bigcup\left(A_{1}\left(a\right)\otimes A_{1}\left(a\right)\otimes A_{1}\left(a\right)\right).
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+A binary product.
+
+\series default
+ For every binary product (whether scalar times scalar, dot product, cross
+ product, Frobenius product, etc) we have
+\begin_inset Formula 
+\[
+g=a_{1}\cdot a_{2}
+\]
+
+\end_inset
+
+and thus 
+\begin_inset Formula $Q_{1}\left(g\right)=\left\{ 1,2\right\} $
+\end_inset
+
+, 
+\begin_inset Formula $Q_{2}\left(g\right)=\left\{ \left(1,2\right),\left(2,1\right)\right\} $
+\end_inset
+
+, and 
+\begin_inset Formula $Q_{d}\left(g\right)=\emptyset$
+\end_inset
+
+ for all 
+\begin_inset Formula $d>2$
+\end_inset
+
+.
+ Then
+\begin_inset Formula 
+\[
+A_{1}\left(g\right)=A_{1}\left(a_{1}\right)\bigcup A_{1}\left(a_{2}\right)
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+A_{2}\left(g\right)=A_{2}\left(a_{1}\right)\;\bigcup\;A_{2}\left(a_{2}\right)\;\bigcup\;\left(A_{1}\left(a_{1}\right)\otimes A_{1}\left(a_{2}\right)\right)
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+A_{3}\left(g\right)=A_{3}\left(a_{1}\right)\;\bigcup\;A_{3}\left(a_{2}\right)\;\bigcup\;\left[A_{1}\left(a_{1}\right)\otimes A_{2}\left(a_{2}\right)\right]\;\bigcup\;\left[A_{2}\left(a_{1}\right)\otimes A_{1}\left(a_{2}\right)\right]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+A quotient.
+ 
+\series default
+The operation is
+\begin_inset Formula 
+\[
+g=\frac{a_{1}}{a_{2}}.
+\]
+
+\end_inset
+
+We have 
+\begin_inset Formula $Q_{1}\left(g\right)=\left\{ 1,2\right\} $
+\end_inset
+
+, 
+\begin_inset Formula $Q_{2}\left(g\right)=\left\{ \left(1,2\right),\left(2,2\right)\right\} $
+\end_inset
+
+, and 
+\begin_inset Formula $Q_{3}\left(g\right)=\left\{ \left(1,2,2\right),\left(2,2,2\right)\right\} $
+\end_inset
+
+.
+ Then from equation 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:A1-general"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+ we have
+\begin_inset Formula 
+\[
+A_{1}\left(g\right)=A_{1}\left(a_{1}\right)\bigcup A_{1}\left(a_{2}\right)
+\]
+
+\end_inset
+
+and from equation 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:A2-general"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+,
+\begin_inset Formula 
+\[
+A_{2}\left(g\right)=A_{2}\left(a_{1}\right)\bigcup A_{2}\left(a_{2}\right)\;\bigcup\;\left(A_{1}\left(a_{1}\right)\otimes A_{1}\left(a_{2}\right)\right)\;\bigcup\;\left(A_{1}\left(a_{2}\right)\otimes A_{1}\left(a_{2}\right)\right).
+\]
+
+\end_inset
+
+We don't write out the expression for 
+\begin_inset Formula $A_{3}\left(g\right)$
+\end_inset
+
+; it can be computed from equation 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "eq:A3-general"
+plural "false"
+caps "false"
+noprefix "false"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsubsection
+Determination of required set 
+\begin_inset Formula $R_{d}\left(g\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+It will help to start with some examples.
+ Consider first a sum,
+\begin_inset Formula 
+\[
+g\left(a_{1},a_{2}\right)=a_{1}+a_{2},
+\]
+
+\end_inset
+
+and suppose that we need the partials listed in the set 
+\begin_inset Formula $R_{1}\left(g\right)$
+\end_inset
+
+.
+ The central question in this section is: given 
+\begin_inset Formula $R_{1}\left(g\right)$
+\end_inset
+
+, which results are required from the arguments 
+\begin_inset Formula $a_{1}$
+\end_inset
+
+ and 
+\begin_inset Formula $a_{2}$
+\end_inset
+
+ to produce the partials in 
+\begin_inset Formula $R_{1}\left(g\right)$
+\end_inset
+
+.
+ For the case of addition, here's the answer: if some partial 
+\begin_inset Formula $p$
+\end_inset
+
+ is required from 
+\begin_inset Formula $g$
+\end_inset
+
+, and is available from an argument 
+\begin_inset Formula $a_{i}$
+\end_inset
+
+, then it is required by 
+\begin_inset Formula $a_{i}$
+\end_inset
+
+.
+ Put more succinctly,
+\begin_inset Formula 
+\[
+R_{1}\left(a_{i}\right)=R_{1}\left(g\right)\bigcap A_{1}\left(a_{i}\right)\;\;i=1,2.
+\]
+
+\end_inset
+
+This will hold for all 
+\begin_inset Formula $d$
+\end_inset
+
+: 
+\begin_inset Formula 
+\[
+R_{d}\left(a_{i}\right)=R_{d}\left(g\right)\bigcap A_{d}\left(a_{i}\right)\;\;i=1,2.
+\]
+
+\end_inset
+
+Now consider a product:
+\begin_inset Formula 
+\[
+g\left(a_{1},a_{2}\right)=a_{1}a_{2}
+\]
+
+\end_inset
+
+with first and second partials
+\begin_inset Formula 
+\[
+\pd{g}{u}=a_{1}\pd{a_{2}}{u}+a_{2}\pd{a_{1}}{u}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\pmix{g}{u}{v}=a_{1}\pmix{a_{2}}{u}{v}+\pd{a_{1}}{v}\pd{a_{2}}{u}+\pd{a_{1}}{v}\pd{a_{2}}{u}+a_{2}\pmix{a_{2}}{u}{v}.
+\]
+
+\end_inset
+
+Suppose 
+\begin_inset Formula $\pd{g}{u}\in R_{1}\left(g\right)$
+\end_inset
+
+.
+ If 
+\begin_inset Formula $a_{1}$
+\end_inset
+
+ and 
+\begin_inset Formula $\pd{a_{2}}{u}$
+\end_inset
+
+ are nonzero, then we need both; similarly for 
+\begin_inset Formula $a_{2}$
+\end_inset
+
+ and 
+\begin_inset Formula $\pd{a_{1}}{u}$
+\end_inset
+
+.
+ Put in terms of our available sets: 
+\end_layout
+
+\begin_layout Itemize
+If 
+\begin_inset Formula $\pd{a_{2}}{u}\in A_{1}\left(a_{2}\right)$
+\end_inset
+
+, then put 
+\begin_inset Formula $\pd{a_{2}}{u}$
+\end_inset
+
+ into 
+\begin_inset Formula $R_{1}\left(a_{2}\right)$
+\end_inset
+
+ and put 
+\begin_inset Formula $a_{1}$
+\end_inset
+
+ into 
+\begin_inset Formula $R_{0}\left(a_{1}\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+If 
+\begin_inset Formula $\pd{a_{1}}{u}\in A_{1}\left(a_{1}\right)$
+\end_inset
+
+, then put 
+\begin_inset Formula $\pd{a_{1}}{u}$
+\end_inset
+
+ into 
+\begin_inset Formula $R_{1}\left(a_{1}\right)$
+\end_inset
+
+ and put 
+\begin_inset Formula $a_{2}$
+\end_inset
+
+ into 
+\begin_inset Formula $R_{0}\left(a_{2}\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For the second derivatives, we have: if 
+\begin_inset Formula $\pmix{g}{u}{v}\in R_{2}\left(g\right)$
+\end_inset
+
+, then
+\end_layout
+
+\begin_layout Itemize
+If 
+\begin_inset Formula $\pmix{a_{2}}{u}{v}\in A_{2}\left(a_{2}\right)$
+\end_inset
+
+, then put 
+\begin_inset Formula $\pmix{a_{2}}{u}{v}$
+\end_inset
+
+ into 
+\begin_inset Formula $R_{2}\left(a_{2}\right)$
+\end_inset
+
+ and put 
+\begin_inset Formula $a_{1}$
+\end_inset
+
+ into 
+\begin_inset Formula $R_{0}\left(a_{1}\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+If 
+\begin_inset Formula $\pmix{a_{1}}{u}{v}\in A_{2}\left(a_{1}\right)$
+\end_inset
+
+, then put 
+\begin_inset Formula $\pmix{a_{1}}{u}{v}$
+\end_inset
+
+ into 
+\begin_inset Formula $R_{2}\left(a_{1}\right)$
+\end_inset
+
+ and put 
+\begin_inset Formula $a_{2}$
+\end_inset
+
+ into 
+\begin_inset Formula $R_{0}\left(a_{2}\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+If 
+\begin_inset Formula $\pd{a_{1}}{u}\in A_{1}\left(a_{1}\right)$
+\end_inset
+
+ and 
+\begin_inset Formula $\pd{a_{2}}{v}\in A_{1}\left(a_{2}\right)$
+\end_inset
+
+, then put 
+\begin_inset Formula $\pd{a_{1}}{u}$
+\end_inset
+
+ into 
+\begin_inset Formula $R_{1}\left(a_{1}\right)$
+\end_inset
+
+ and put 
+\begin_inset Formula $\pd{a_{2}}{v}$
+\end_inset
+
+ into 
+\begin_inset Formula $R_{2}\left(a_{2}\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+If 
+\begin_inset Formula $\pd{a_{1}}{v}\in A_{1}\left(a_{1}\right)$
+\end_inset
+
+ and 
+\begin_inset Formula $\pd{a_{2}}{u}\in A_{1}\left(a_{2}\right)$
+\end_inset
+
+, then put 
+\begin_inset Formula $\pd{a_{1}}{v}$
+\end_inset
+
+ into 
+\begin_inset Formula $R_{1}\left(a_{1}\right)$
+\end_inset
+
+ and put 
+\begin_inset Formula $\pd{a_{2}}{u}$
+\end_inset
+
+ into 
+\begin_inset Formula $R_{2}\left(a_{2}\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Mixing first-order spatial and functional derivatives
+\end_layout
+
+\begin_layout Standard
+Let 
+\begin_inset Formula $D_{\alpha}$
+\end_inset
+
+ be a first-order spatial differential operator labeled by 
+\begin_inset Formula $\alpha$
+\end_inset
+
+.
+ Suppose that 
+\begin_inset Formula $g$
+\end_inset
+
+ depends on arguments 
+\begin_inset Formula $a_{1},a_{2},\cdots,a_{N}$
+\end_inset
+
+ .
+ For now, we make the restriction that 
+\begin_inset Formula $g$
+\end_inset
+
+ and its arguments don't depend on spatial derivatives of functions; in
+ other words, we consider only first-order spatial derivatives.
+ From the chain rule, we have
+\begin_inset Formula 
+\[
+D_{\alpha}g=\sum_{\lambda=1}^{N}\pd{g}{a_{\lambda}}D_{\alpha}a_{\lambda}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+=\sum_{\lambda\in Q_{1}\left(g\right)}\pd{g}{a_{\lambda}}D_{\alpha}a_{\lambda}.
+\]
+
+\end_inset
+
+Now differentiate with respect to a function 
+\begin_inset Formula $u$
+\end_inset
+
+,
+\begin_inset Formula 
+\[
+\pd{}{u}D_{\alpha}g=\sum_{\lambda=1}^{N}\pd{g}{a_{\lambda}}\pd{}{u}D_{\alpha}a_{\lambda}+\sum_{\lambda=1}^{N}\sum_{\mu=1}^{N}\pmix{g}{a_{\lambda}}{a_{\mu}}D_{\alpha}a_{\lambda}\pd{a_{\mu}}{u}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+=\sum_{\lambda\in Q_{1}\left(g\right)}\pd{g}{a_{\lambda}}\pd{}{u}D_{\alpha}a_{\lambda}+\sum_{\left(\lambda,\mu\right)\in Q_{2}\left(g\right)}\pmix{g}{a_{\lambda}}{a_{\mu}}D_{\alpha}a_{\lambda}\pd{a_{\mu}}{u}.
+\]
+
+\end_inset
+
+We'll also differentiate with respect to 
+\begin_inset Formula $D_{\beta}u$
+\end_inset
+
+.
+ By assumption, we know that 
+\begin_inset Formula $a_{\lambda}$
+\end_inset
+
+ and 
+\begin_inset Formula $\pd{g}{a_{\lambda}}$
+\end_inset
+
+ don't depend on any spatial derivatives of 
+\begin_inset Formula $u$
+\end_inset
+
+, so we find 
+\begin_inset Formula 
+\[
+\pd{}{D_{\beta}u}D_{\alpha}g=\sum_{\lambda\in Q_{1}\left(g\right)}\pd{g}{a_{\lambda}}\pd{}{D_{\beta}u}D_{\alpha}a_{\lambda}.
+\]
+
+\end_inset
+
+ 
+\end_layout
+
+\begin_layout Subsection
+Available sets
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset bibtex
+LatexCommand bibtex
+btprint "btPrintCited"
+bibfiles "refs"
+options "siam"
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

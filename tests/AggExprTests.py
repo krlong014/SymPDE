@@ -1,10 +1,12 @@
 import pytest
 import numpy as np
-from Expr import (Expr, ConstantScalarExpr, ConstantVectorExpr,
-    Coordinate, AggExpr)
-from SimpleEvaluator import compareEval, evalExpr
 
-
+from SymPDE.Expr import Expr
+from SymPDE.ExprShape import AggShape
+from SymPDE.ConstantExpr import ConstantScalarExpr, ConstantVectorExpr
+from SymPDE.Coordinate import Coordinate
+from SymPDE.AggExpr import AggExpr
+from SymPDE.SimpleEvaluator import compareEval, evalExpr
 
 class TestAggs:
 
@@ -145,7 +147,7 @@ class TestExpectedAggErrors:
 
 
         print('detected expected exception: {}'.format(err_info))
-        assert('not compatible' in str(err_info.value))
+        assert('Cannot add/subtract' in str(err_info.value))
 
     def test_NoAddingAggs2(self):
         with pytest.raises(ValueError) as err_info:
@@ -157,7 +159,7 @@ class TestExpectedAggErrors:
 
 
         print('detected expected exception: {}'.format(err_info))
-        assert('not compatible' in str(err_info.value))
+        assert('Cannot add/subtract' in str(err_info.value))
 
     def test_NoMultiplyingAggs1(self):
         with pytest.raises(ValueError) as err_info:
@@ -168,7 +170,7 @@ class TestExpectedAggErrors:
 
 
         print('detected expected exception: {}'.format(err_info))
-        assert('not compatible' in str(err_info.value))
+        assert('Cannot multiply' in str(err_info.value))
 
     def test_NoMultiplyingAggs2(self):
         with pytest.raises(ValueError) as err_info:
@@ -180,7 +182,7 @@ class TestExpectedAggErrors:
 
 
         print('detected expected exception: {}'.format(err_info))
-        assert('not compatible' in str(err_info.value))
+        assert('Cannot multiply' in str(err_info.value))
 
     def test_NoNegatingAggs(self):
         with pytest.raises(ValueError) as err_info:
@@ -190,7 +192,7 @@ class TestExpectedAggErrors:
 
 
         print('detected expected exception: {}'.format(err_info))
-        assert('cannot negate' in str(err_info.value))
+        assert('Cannot negate' in str(err_info.value))
 
     def test_NoDividingByAggs(self):
         with pytest.raises(ValueError) as err_info:
@@ -200,7 +202,7 @@ class TestExpectedAggErrors:
 
 
         print('detected expected exception: {}'.format(err_info))
-        assert('Division by list' in str(err_info.value))
+        assert('Cannot divide' in str(err_info.value))
 
     def test_NoDividingOfAggs(self):
         with pytest.raises(ValueError) as err_info:
@@ -210,4 +212,4 @@ class TestExpectedAggErrors:
 
 
         print('detected expected exception: {}'.format(err_info))
-        assert('Dividing a list' in str(err_info.value))
+        assert('Cannot divide' in str(err_info.value))

@@ -1,0 +1,598 @@
+
+    \documentclass[letter]{article}
+    \special{papersize=8.5in,11in}
+    \usepackage[margin=0.5in]{geometry}
+    \usepackage{amsmath}
+
+    \title{Chain rule test}
+    \begin{document}
+    
+\section{One variable, two args}
+\begin{multline*}
+\frac{\partial g}{\partial x} =
+\frac{\partial g}{\partial a_1}
+\left(
+\frac{\partial a_1}{\partial x}
+\right)
++
+\frac{\partial g}{\partial a_2}
+\left(
+\frac{\partial a_2}{\partial x}
+\right)
+\end{multline*}
+\section{Two variables, two args}
+\begin{multline*}
+\frac{\partial^2 g}{\partial x\,\partial y} =
+\frac{\partial g}{\partial a_1}
+\left(
+\frac{\partial^2 a_1}{\partial x\,\partial y}
+\right)
++
+\frac{\partial g}{\partial a_2}
+\left(
+\frac{\partial^2 a_2}{\partial x\,\partial y}
+\right)
++
+\frac{\partial^2 g}{\partial a_1\,\partial a_1}
+\left(
+\frac{\partial a_1}{\partial x}
+\frac{\partial a_1}{\partial y}
+\right)
++
+\frac{\partial^2 g}{\partial a_1\,\partial a_2}
+\left(
+\frac{\partial a_1}{\partial x}
+\frac{\partial a_2}{\partial y}
+\right)
+\\
++
+\frac{\partial^2 g}{\partial a_2\,\partial a_1}
+\left(
+\frac{\partial a_2}{\partial x}
+\frac{\partial a_1}{\partial y}
+\right)
++
+\frac{\partial^2 g}{\partial a_2\,\partial a_2}
+\left(
+\frac{\partial a_2}{\partial x}
+\frac{\partial a_2}{\partial y}
+\right)
+\end{multline*}
+\section{Three variables, two args}
+\begin{multline*}
+\frac{\partial^3 g}{\partial x\,\partial y\,\partial z} =
+\frac{\partial g}{\partial a_1}
+\left(
+\frac{\partial^3 a_1}{\partial x\,\partial y\,\partial z}
+\right)
++
+\frac{\partial g}{\partial a_2}
+\left(
+\frac{\partial^3 a_2}{\partial x\,\partial y\,\partial z}
+\right)
++
+\frac{\partial^2 g}{\partial a_1\,\partial a_1}
+\left(
+\frac{\partial^2 a_1}{\partial x\,\partial y}
+\frac{\partial a_1}{\partial z}
++
+\frac{\partial a_1}{\partial x}
+\frac{\partial^2 a_1}{\partial y\,\partial z}
++
+\frac{\partial^2 a_1}{\partial x\,\partial z}
+\frac{\partial a_1}{\partial y}
+\right)
+\\
++
+\frac{\partial^2 g}{\partial a_1\,\partial a_2}
+\left(
+\frac{\partial^2 a_1}{\partial x\,\partial y}
+\frac{\partial a_2}{\partial z}
++
+\frac{\partial a_1}{\partial x}
+\frac{\partial^2 a_2}{\partial y\,\partial z}
++
+\frac{\partial^2 a_1}{\partial x\,\partial z}
+\frac{\partial a_2}{\partial y}
+\right)
+\\
++
+\frac{\partial^2 g}{\partial a_2\,\partial a_1}
+\left(
+\frac{\partial^2 a_2}{\partial x\,\partial y}
+\frac{\partial a_1}{\partial z}
++
+\frac{\partial a_2}{\partial x}
+\frac{\partial^2 a_1}{\partial y\,\partial z}
++
+\frac{\partial^2 a_2}{\partial x\,\partial z}
+\frac{\partial a_1}{\partial y}
+\right)
+\\
++
+\frac{\partial^2 g}{\partial a_2\,\partial a_2}
+\left(
+\frac{\partial^2 a_2}{\partial x\,\partial y}
+\frac{\partial a_2}{\partial z}
++
+\frac{\partial a_2}{\partial x}
+\frac{\partial^2 a_2}{\partial y\,\partial z}
++
+\frac{\partial^2 a_2}{\partial x\,\partial z}
+\frac{\partial a_2}{\partial y}
+\right)
+\\
++
+\frac{\partial^3 g}{\partial a_1\,\partial a_1\,\partial a_1}
+\left(
+\frac{\partial a_1}{\partial x}
+\frac{\partial a_1}{\partial y}
+\frac{\partial a_1}{\partial z}
+\right)
++
+\frac{\partial^3 g}{\partial a_1\,\partial a_1\,\partial a_2}
+\left(
+\frac{\partial a_1}{\partial x}
+\frac{\partial a_1}{\partial y}
+\frac{\partial a_2}{\partial z}
+\right)
+\\
++
+\frac{\partial^3 g}{\partial a_1\,\partial a_2\,\partial a_1}
+\left(
+\frac{\partial a_1}{\partial x}
+\frac{\partial a_2}{\partial y}
+\frac{\partial a_1}{\partial z}
+\right)
++
+\frac{\partial^3 g}{\partial a_1\,\partial a_2\,\partial a_2}
+\left(
+\frac{\partial a_1}{\partial x}
+\frac{\partial a_2}{\partial y}
+\frac{\partial a_2}{\partial z}
+\right)
+\\
++
+\frac{\partial^3 g}{\partial a_2\,\partial a_1\,\partial a_1}
+\left(
+\frac{\partial a_2}{\partial x}
+\frac{\partial a_1}{\partial y}
+\frac{\partial a_1}{\partial z}
+\right)
++
+\frac{\partial^3 g}{\partial a_2\,\partial a_1\,\partial a_2}
+\left(
+\frac{\partial a_2}{\partial x}
+\frac{\partial a_1}{\partial y}
+\frac{\partial a_2}{\partial z}
+\right)
+\\
++
+\frac{\partial^3 g}{\partial a_2\,\partial a_2\,\partial a_1}
+\left(
+\frac{\partial a_2}{\partial x}
+\frac{\partial a_2}{\partial y}
+\frac{\partial a_1}{\partial z}
+\right)
++
+\frac{\partial^3 g}{\partial a_2\,\partial a_2\,\partial a_2}
+\left(
+\frac{\partial a_2}{\partial x}
+\frac{\partial a_2}{\partial y}
+\frac{\partial a_2}{\partial z}
+\right)
+\\
+\end{multline*}
+\section{Two variables, three args}
+\begin{multline*}
+\frac{\partial^2 g}{\partial x\,\partial y} =
+\frac{\partial g}{\partial a_1}
+\left(
+\frac{\partial^2 a_1}{\partial x\,\partial y}
+\right)
++
+\frac{\partial g}{\partial a_2}
+\left(
+\frac{\partial^2 a_2}{\partial x\,\partial y}
+\right)
++
+\frac{\partial g}{\partial a_3}
+\left(
+\frac{\partial^2 a_3}{\partial x\,\partial y}
+\right)
++
+\frac{\partial^2 g}{\partial a_1\,\partial a_1}
+\left(
+\frac{\partial a_1}{\partial x}
+\frac{\partial a_1}{\partial y}
+\right)
++
+\frac{\partial^2 g}{\partial a_1\,\partial a_2}
+\left(
+\frac{\partial a_1}{\partial x}
+\frac{\partial a_2}{\partial y}
+\right)
+\\
++
+\frac{\partial^2 g}{\partial a_1\,\partial a_3}
+\left(
+\frac{\partial a_1}{\partial x}
+\frac{\partial a_3}{\partial y}
+\right)
++
+\frac{\partial^2 g}{\partial a_2\,\partial a_1}
+\left(
+\frac{\partial a_2}{\partial x}
+\frac{\partial a_1}{\partial y}
+\right)
++
+\frac{\partial^2 g}{\partial a_2\,\partial a_2}
+\left(
+\frac{\partial a_2}{\partial x}
+\frac{\partial a_2}{\partial y}
+\right)
+\\
++
+\frac{\partial^2 g}{\partial a_2\,\partial a_3}
+\left(
+\frac{\partial a_2}{\partial x}
+\frac{\partial a_3}{\partial y}
+\right)
++
+\frac{\partial^2 g}{\partial a_3\,\partial a_1}
+\left(
+\frac{\partial a_3}{\partial x}
+\frac{\partial a_1}{\partial y}
+\right)
++
+\frac{\partial^2 g}{\partial a_3\,\partial a_2}
+\left(
+\frac{\partial a_3}{\partial x}
+\frac{\partial a_2}{\partial y}
+\right)
+\\
++
+\frac{\partial^2 g}{\partial a_3\,\partial a_3}
+\left(
+\frac{\partial a_3}{\partial x}
+\frac{\partial a_3}{\partial y}
+\right)
+\end{multline*}
+\section{Three variables, three args}
+\begin{multline*}
+\frac{\partial^3 g}{\partial x\,\partial y\,\partial z} =
+\frac{\partial g}{\partial a_1}
+\left(
+\frac{\partial^3 a_1}{\partial x\,\partial y\,\partial z}
+\right)
++
+\frac{\partial g}{\partial a_2}
+\left(
+\frac{\partial^3 a_2}{\partial x\,\partial y\,\partial z}
+\right)
++
+\frac{\partial g}{\partial a_3}
+\left(
+\frac{\partial^3 a_3}{\partial x\,\partial y\,\partial z}
+\right)
++
+\frac{\partial^2 g}{\partial a_1\,\partial a_1}
+\left(
+\frac{\partial^2 a_1}{\partial x\,\partial y}
+\frac{\partial a_1}{\partial z}
++
+\frac{\partial a_1}{\partial x}
+\frac{\partial^2 a_1}{\partial y\,\partial z}
++
+\frac{\partial^2 a_1}{\partial x\,\partial z}
+\frac{\partial a_1}{\partial y}
+\right)
+\\
++
+\frac{\partial^2 g}{\partial a_1\,\partial a_2}
+\left(
+\frac{\partial^2 a_1}{\partial x\,\partial y}
+\frac{\partial a_2}{\partial z}
++
+\frac{\partial a_1}{\partial x}
+\frac{\partial^2 a_2}{\partial y\,\partial z}
++
+\frac{\partial^2 a_1}{\partial x\,\partial z}
+\frac{\partial a_2}{\partial y}
+\right)
+\\
++
+\frac{\partial^2 g}{\partial a_1\,\partial a_3}
+\left(
+\frac{\partial^2 a_1}{\partial x\,\partial y}
+\frac{\partial a_3}{\partial z}
++
+\frac{\partial a_1}{\partial x}
+\frac{\partial^2 a_3}{\partial y\,\partial z}
++
+\frac{\partial^2 a_1}{\partial x\,\partial z}
+\frac{\partial a_3}{\partial y}
+\right)
+\\
++
+\frac{\partial^2 g}{\partial a_2\,\partial a_1}
+\left(
+\frac{\partial^2 a_2}{\partial x\,\partial y}
+\frac{\partial a_1}{\partial z}
++
+\frac{\partial a_2}{\partial x}
+\frac{\partial^2 a_1}{\partial y\,\partial z}
++
+\frac{\partial^2 a_2}{\partial x\,\partial z}
+\frac{\partial a_1}{\partial y}
+\right)
+\\
++
+\frac{\partial^2 g}{\partial a_2\,\partial a_2}
+\left(
+\frac{\partial^2 a_2}{\partial x\,\partial y}
+\frac{\partial a_2}{\partial z}
++
+\frac{\partial a_2}{\partial x}
+\frac{\partial^2 a_2}{\partial y\,\partial z}
++
+\frac{\partial^2 a_2}{\partial x\,\partial z}
+\frac{\partial a_2}{\partial y}
+\right)
+\\
++
+\frac{\partial^2 g}{\partial a_2\,\partial a_3}
+\left(
+\frac{\partial^2 a_2}{\partial x\,\partial y}
+\frac{\partial a_3}{\partial z}
++
+\frac{\partial a_2}{\partial x}
+\frac{\partial^2 a_3}{\partial y\,\partial z}
++
+\frac{\partial^2 a_2}{\partial x\,\partial z}
+\frac{\partial a_3}{\partial y}
+\right)
+\\
++
+\frac{\partial^2 g}{\partial a_3\,\partial a_1}
+\left(
+\frac{\partial^2 a_3}{\partial x\,\partial y}
+\frac{\partial a_1}{\partial z}
++
+\frac{\partial a_3}{\partial x}
+\frac{\partial^2 a_1}{\partial y\,\partial z}
++
+\frac{\partial^2 a_3}{\partial x\,\partial z}
+\frac{\partial a_1}{\partial y}
+\right)
+\\
++
+\frac{\partial^2 g}{\partial a_3\,\partial a_2}
+\left(
+\frac{\partial^2 a_3}{\partial x\,\partial y}
+\frac{\partial a_2}{\partial z}
++
+\frac{\partial a_3}{\partial x}
+\frac{\partial^2 a_2}{\partial y\,\partial z}
++
+\frac{\partial^2 a_3}{\partial x\,\partial z}
+\frac{\partial a_2}{\partial y}
+\right)
+\\
++
+\frac{\partial^2 g}{\partial a_3\,\partial a_3}
+\left(
+\frac{\partial^2 a_3}{\partial x\,\partial y}
+\frac{\partial a_3}{\partial z}
++
+\frac{\partial a_3}{\partial x}
+\frac{\partial^2 a_3}{\partial y\,\partial z}
++
+\frac{\partial^2 a_3}{\partial x\,\partial z}
+\frac{\partial a_3}{\partial y}
+\right)
+\\
++
+\frac{\partial^3 g}{\partial a_1\,\partial a_1\,\partial a_1}
+\left(
+\frac{\partial a_1}{\partial x}
+\frac{\partial a_1}{\partial y}
+\frac{\partial a_1}{\partial z}
+\right)
++
+\frac{\partial^3 g}{\partial a_1\,\partial a_1\,\partial a_2}
+\left(
+\frac{\partial a_1}{\partial x}
+\frac{\partial a_1}{\partial y}
+\frac{\partial a_2}{\partial z}
+\right)
+\\
++
+\frac{\partial^3 g}{\partial a_1\,\partial a_1\,\partial a_3}
+\left(
+\frac{\partial a_1}{\partial x}
+\frac{\partial a_1}{\partial y}
+\frac{\partial a_3}{\partial z}
+\right)
++
+\frac{\partial^3 g}{\partial a_1\,\partial a_2\,\partial a_1}
+\left(
+\frac{\partial a_1}{\partial x}
+\frac{\partial a_2}{\partial y}
+\frac{\partial a_1}{\partial z}
+\right)
+\\
++
+\frac{\partial^3 g}{\partial a_1\,\partial a_2\,\partial a_2}
+\left(
+\frac{\partial a_1}{\partial x}
+\frac{\partial a_2}{\partial y}
+\frac{\partial a_2}{\partial z}
+\right)
++
+\frac{\partial^3 g}{\partial a_1\,\partial a_2\,\partial a_3}
+\left(
+\frac{\partial a_1}{\partial x}
+\frac{\partial a_2}{\partial y}
+\frac{\partial a_3}{\partial z}
+\right)
+\\
++
+\frac{\partial^3 g}{\partial a_1\,\partial a_3\,\partial a_1}
+\left(
+\frac{\partial a_1}{\partial x}
+\frac{\partial a_3}{\partial y}
+\frac{\partial a_1}{\partial z}
+\right)
++
+\frac{\partial^3 g}{\partial a_1\,\partial a_3\,\partial a_2}
+\left(
+\frac{\partial a_1}{\partial x}
+\frac{\partial a_3}{\partial y}
+\frac{\partial a_2}{\partial z}
+\right)
+\\
++
+\frac{\partial^3 g}{\partial a_1\,\partial a_3\,\partial a_3}
+\left(
+\frac{\partial a_1}{\partial x}
+\frac{\partial a_3}{\partial y}
+\frac{\partial a_3}{\partial z}
+\right)
++
+\frac{\partial^3 g}{\partial a_2\,\partial a_1\,\partial a_1}
+\left(
+\frac{\partial a_2}{\partial x}
+\frac{\partial a_1}{\partial y}
+\frac{\partial a_1}{\partial z}
+\right)
+\\
++
+\frac{\partial^3 g}{\partial a_2\,\partial a_1\,\partial a_2}
+\left(
+\frac{\partial a_2}{\partial x}
+\frac{\partial a_1}{\partial y}
+\frac{\partial a_2}{\partial z}
+\right)
++
+\frac{\partial^3 g}{\partial a_2\,\partial a_1\,\partial a_3}
+\left(
+\frac{\partial a_2}{\partial x}
+\frac{\partial a_1}{\partial y}
+\frac{\partial a_3}{\partial z}
+\right)
+\\
++
+\frac{\partial^3 g}{\partial a_2\,\partial a_2\,\partial a_1}
+\left(
+\frac{\partial a_2}{\partial x}
+\frac{\partial a_2}{\partial y}
+\frac{\partial a_1}{\partial z}
+\right)
++
+\frac{\partial^3 g}{\partial a_2\,\partial a_2\,\partial a_2}
+\left(
+\frac{\partial a_2}{\partial x}
+\frac{\partial a_2}{\partial y}
+\frac{\partial a_2}{\partial z}
+\right)
+\\
++
+\frac{\partial^3 g}{\partial a_2\,\partial a_2\,\partial a_3}
+\left(
+\frac{\partial a_2}{\partial x}
+\frac{\partial a_2}{\partial y}
+\frac{\partial a_3}{\partial z}
+\right)
++
+\frac{\partial^3 g}{\partial a_2\,\partial a_3\,\partial a_1}
+\left(
+\frac{\partial a_2}{\partial x}
+\frac{\partial a_3}{\partial y}
+\frac{\partial a_1}{\partial z}
+\right)
+\\
++
+\frac{\partial^3 g}{\partial a_2\,\partial a_3\,\partial a_2}
+\left(
+\frac{\partial a_2}{\partial x}
+\frac{\partial a_3}{\partial y}
+\frac{\partial a_2}{\partial z}
+\right)
++
+\frac{\partial^3 g}{\partial a_2\,\partial a_3\,\partial a_3}
+\left(
+\frac{\partial a_2}{\partial x}
+\frac{\partial a_3}{\partial y}
+\frac{\partial a_3}{\partial z}
+\right)
+\\
++
+\frac{\partial^3 g}{\partial a_3\,\partial a_1\,\partial a_1}
+\left(
+\frac{\partial a_3}{\partial x}
+\frac{\partial a_1}{\partial y}
+\frac{\partial a_1}{\partial z}
+\right)
++
+\frac{\partial^3 g}{\partial a_3\,\partial a_1\,\partial a_2}
+\left(
+\frac{\partial a_3}{\partial x}
+\frac{\partial a_1}{\partial y}
+\frac{\partial a_2}{\partial z}
+\right)
+\\
++
+\frac{\partial^3 g}{\partial a_3\,\partial a_1\,\partial a_3}
+\left(
+\frac{\partial a_3}{\partial x}
+\frac{\partial a_1}{\partial y}
+\frac{\partial a_3}{\partial z}
+\right)
++
+\frac{\partial^3 g}{\partial a_3\,\partial a_2\,\partial a_1}
+\left(
+\frac{\partial a_3}{\partial x}
+\frac{\partial a_2}{\partial y}
+\frac{\partial a_1}{\partial z}
+\right)
+\\
++
+\frac{\partial^3 g}{\partial a_3\,\partial a_2\,\partial a_2}
+\left(
+\frac{\partial a_3}{\partial x}
+\frac{\partial a_2}{\partial y}
+\frac{\partial a_2}{\partial z}
+\right)
++
+\frac{\partial^3 g}{\partial a_3\,\partial a_2\,\partial a_3}
+\left(
+\frac{\partial a_3}{\partial x}
+\frac{\partial a_2}{\partial y}
+\frac{\partial a_3}{\partial z}
+\right)
+\\
++
+\frac{\partial^3 g}{\partial a_3\,\partial a_3\,\partial a_1}
+\left(
+\frac{\partial a_3}{\partial x}
+\frac{\partial a_3}{\partial y}
+\frac{\partial a_1}{\partial z}
+\right)
++
+\frac{\partial^3 g}{\partial a_3\,\partial a_3\,\partial a_2}
+\left(
+\frac{\partial a_3}{\partial x}
+\frac{\partial a_3}{\partial y}
+\frac{\partial a_2}{\partial z}
+\right)
+\\
++
+\frac{\partial^3 g}{\partial a_3\,\partial a_3\,\partial a_3}
+\left(
+\frac{\partial a_3}{\partial x}
+\frac{\partial a_3}{\partial y}
+\frac{\partial a_3}{\partial z}
+\right)
+\end{multline*}
+\end{document}
