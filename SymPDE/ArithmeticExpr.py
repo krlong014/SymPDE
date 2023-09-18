@@ -268,4 +268,4 @@ class PowerExpr(BinaryExpr):
         super().__init__(L, R, ScalarShape())
 
     def __str__(self):
-        return 'pow({},{})'.format(self.left(), self.right)
+        return 'pow({},{})'.format(self.left(), self.right())
