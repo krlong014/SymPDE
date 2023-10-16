@@ -5,6 +5,7 @@ from SymPDE.ExprShape import ExprShape
 from SymPDE.Coordinate import Coordinate
 from SymPDE.ArithmeticExpr import SumExpr, ProductExpr, PowerExpr, QuotientExpr
 import numpy as np
+from scipy.special import binom
 #SumExpr
 #ProductExpr
 #QuotientExpr
@@ -36,7 +37,7 @@ def flatten(lst):
 def part(n):
 	# print("triggered part({})".format(n))
 	if n == 1:
-		return [1]
+		return [0]
 
 	parts = [] 
 
@@ -53,18 +54,22 @@ def intPart(n):
 
 
 ## assuming order d and n arguments, builds the Q set
-def buildQ(d,n):
+def buildQ(d,n,multiplicities=False):
 	if d == 1:
-		Q = [i+1 for i in range(n)]
+		Q = [i for i in range(n)]
 	else:
-		dummyIter = [(i+1) for i in range(n)]
+		dummyIter = [i for i in range(n)]
 
-		Q = list(it.product(dummyIter,repeat=d))
-	
+		Q = list(it.combinations_with_replacement(dummyIter,d))
+
+	mults = [[int(binom(d,i)) for i in range(len(Q))]]
+
+	Q = Q + mults 
 	return Q
 
 
 ## builds all Q sets with the highest order being ordercap for an n argument expr
+##this needs to be moved into ExprWithChildren
 def buildAllQ(ordercap,n):
 	assert(n >= 1)
 
@@ -73,40 +78,55 @@ def buildAllQ(ordercap,n):
 		Qsets.append(buildQ(i+1,n))
 
 	return Qsets
+	
 
-Qsets = buildAllQ(3,3)
-print("Qsets = ",Qsets)
+
+# Qsets = buildAllQ(3,2)
+# print("Qsets = ",Qsets)
 
 
 # a1 = Coordinate(0)
 # a2 = Coordinate(1)
-# g = PowerExpr(a1,a2)
-# print("g = ",g)
+# g = ProductExpr(a1,a2)
 
-def refineQsets(Qsets, g):
-	order = len(Qsets)
-
-	if isinstance(g,SumExpr):
-		Qconst = Qsets.pop(0)
-		Qvar = Qsets
-
-	if isinstance(g,ProductExpr) or isinstance(g, QuotientExpr) or isinstance(g,PowerExpr):
-		if order >= 2:
-			Qconst = Qsets.pop(1)
-			Qvar = Qsets 
-		else:
-			Qconst = []
-			Qvar = Qsets 
-	
-	return(Qconst, Qvar)
-
-
-# [Qconst, Qvar] = refineQsets(Qsets,g)
+# Qsets = g.buildAllQUpToOrder(3)
+# print("Qsets = ",Qsets)
+# [Qconst, Qvar] = g.refineQ(Qsets)
 # print("Qconst = {}, Qvar = {}".format(Qconst,Qvar))
 
-#double check that all Q sets are being calculated correctly
-#make an ExprEvalTests using pytest
-	#classes should start with Test....
-	#methods should start with test_....
-	#each test has condition true/false 
-#start by finding out how to get more info out of pytest
+# Q = g.buildAllQUpToOrder(3)
+# print("Q ")
+
+# A = a2.buildAllAUpToOrder(1)
+# print("A = ",A)
+
+# Qsets = g.buildAllQUpToOrder(3)
+# print("Qsets = ",Qsets)
+# [Qconst, Qvar] = g.refineQ(Qsets)
+# print("Qconst = {}, Qvar = {}".format(Qconst, Qvar))
+
+# #these "picees" can each be moved into their respective subclasses of ArithmeticExpr
+# #maybe even separate by Linear/Nonlinear
+# def refineQsets(Qsets, g):
+# 	order = len(Qsets)
+
+# 	if isinstance(g,SumExpr):
+# 		Qconst = Qsets.pop(0)
+# 		Qvar = []
+
+# 	if isinstance(g,ProductExpr) or isinstance(g, QuotientExpr) or isinstance(g,PowerExpr):
+# 		if order >= 2:
+# 			Qvar = Qsets.pop(0)
+# 			Qconst = Qsets.pop(0)
+
+# 			for Q in Qconst:
+# 				if Q[0] == Q[1]:
+# 					Qconst.remove(Q)
+
+# 			# print("remove_indeces = ",remove_indeces)
+# 		else:
+# 			Qconst = []
+# 			Qvar = Qsets
+	
+# 	return(Qconst, Qvar)
+

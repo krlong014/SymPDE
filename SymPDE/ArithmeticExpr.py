@@ -1,7 +1,10 @@
 from . Expr import Expr
 from . ExprShape import ScalarShape, VectorShape
+from SymPDE.Coordinate import Coordinate
 from abc import ABC, abstractmethod
 from numpy.linalg import norm
+import itertools as it
+from scipy.special import binom
 
 #############################################################################
 #
@@ -91,6 +94,93 @@ class ExprWithChildren(Expr):
             rtn = rtn.union(s)
         return rtn
 
+    #intermediate step in part
+    def flatten(lst):
+        if type(lst) != list:
+            return lst 
+
+        flatList = []
+
+        for item in lst:
+            if type(item) == list:
+                for x in flatten(item):
+                    flatList.append(x)
+            else:
+                flatList.append(item)
+
+        return flatList
+
+    #intermediate step in intPart
+    def part(n):
+        if n == 1:
+            return [0]
+
+        parts = [] 
+
+        for i in range(n):
+            for j in range(len(part(i))):
+                parts.append(flatten([n - i] + [part(i)[j]]))
+
+        return parts
+
+    #builds an integer partition of n
+    def intPart(n):
+        return [[n]] + part(n)
+
+
+    #builds a particular Q set of order d
+    #appends a list of the multiplicities of each derivative to the end
+    def buildFForOrder(self,d):
+        n = len(self._children)
+        if d == 1:
+            F = [i for i in range(n)]
+        else:
+            dummyIter = [(i) for i in range(n)]
+
+            F = list(it.combinations_with_replacement(dummyIter,d))
+
+        mults = [int(binom(d,i)) for i in range(len(F))]
+        
+
+        FwithMults = {}
+        for i in range(len(mults)):
+            FwithMults[F[i]] = mults[i]
+
+        return FwithMults
+
+    #builds all Q sets of order d or less
+    def buildAllFUpToOrder(self,d):
+        n = len(self._children)
+        assert(n >= 1)
+
+        Fsets = {}
+        for i in range(d):
+            Fsets = Fsets | self.buildFForOrder(i+1)
+
+        return Fsets
+
+    #builds a particular A set of order d
+    def buildAForOrder(self,d):
+        n = len(self._children)
+        assert(n >= 1)
+
+        A = []
+        for i in range(n):
+            A.append(self.child(i).buildAForOrder(d))
+
+        return A
+
+    #builds all A sets of order d or less
+    def buildAllAUpToOrder(self,d):
+        n = len(self._children)
+        assert (n >= 1)
+
+        Asets = []
+        for i in range(d):
+            Asets.append(self.buildAForOrder(i+1))
+
+        return Asets
+
 
 class UnaryExpr(ExprWithChildren):
     def __init__(self, arg, shape):
@@ -107,6 +197,7 @@ class UnaryExpr(ExprWithChildren):
 class UnaryMinus(UnaryExpr):
     def __init__(self, arg):
         super().__init__(arg, Expr._getShape(arg))
+        self.arg = arg 
 
     def __str__(self):
         return '-%s' % Expr._maybeParenthesize(self.arg())
@@ -116,6 +207,22 @@ class UnaryMinus(UnaryExpr):
 
     def isLinearInTests(self):
         return self.arg().isLinearInTests()
+
+    def buildQ(self,d):
+        Fsets = self.buildAllFUpToOrder(d)
+        Fsets_keys = list(Fsets.keys())
+
+        f_key = Fsets_keys[0]
+
+        Qconst = {}
+        Qconst[f_key] = Fsets[f_key]
+        Qvar = {}
+
+        return Qconst,Qvar
+
+    def buildA(self,d):
+        [Aconst, Avar] = self.arg.buildA()
+        return Aconst, Avar
 
 
 
@@ -148,6 +255,8 @@ class BinaryArithmeticOp(BinaryExpr):
 class SumExpr(BinaryArithmeticOp):
     def __init__(self, L, R, sign):
         super().__init__(L, R, Expr._getShape(L))
+        self.L = L 
+        self.R = R 
         self.sign = sign
 
     def opString(self):
@@ -178,10 +287,58 @@ class SumExpr(BinaryArithmeticOp):
         return (self.left().isLinearInTests()
                 and self.right().isLinearInTests())
 
+    def buildF(self,d):
+        Fsets = self.buildAllFUpToOrder(d)
+        return Fsets
+
+    def buildQ(self,d):
+        Fsets = self.buildAllFUpToOrder(d)
+        Fsets_keys = Fsets.keys()
+        # Qconst = Fsets[0]
+
+        Qconst = {}; Qvar = {}
+        const_keys_to_add = []
+        for key in Fsets_keys:
+            if type(key) == int:
+                const_keys_to_add.append(key)
+
+        for key in const_keys_to_add:
+            Qconst[key] = Fsets[key]
+
+        return [Qconst,Qvar]
+
+    def buildA(self):
+        [LeftAconst, LeftAvar] = self.L.buildA()
+        [RightAconst, RightAvar] = self.R.buildA()
+
+        A = LeftAconst | LeftAvar | RightAvar | RightAconst
+        a_keys = A.keys()
+
+        Aconst = {}
+        a_const_keys_to_add = LeftAconst.keys() & RightAconst.keys()
+        for a in a_const_keys_to_add:
+            Aconst[a] = A[a]
+        
+        Avar = {}
+        a_var_keys_to_add = []
+        for a in a_keys:
+            if a not in Aconst:
+                a_var_keys_to_add.append(a)
+
+        for a in a_var_keys_to_add:
+            Avar[a] = A[a]
+
+        return Aconst, Avar
+
+    # def buildR(self,d):
+        
+
 
 class ProductExpr(BinaryArithmeticOp):
     def __init__(self, L, R):
         super().__init__(L, R, ScalarShape())
+        self.L = L 
+        self.R = R 
 
     def opString(self):
         return '*'
@@ -197,6 +354,55 @@ class ProductExpr(BinaryArithmeticOp):
             return True
         return False
 
+    def buildQ(self, d):
+        assert(type(d)==int)
+        Fsets = self.buildAllFUpToOrder(d)
+        Fsets_keys = Fsets.keys()
+
+        Qconst = {}; Qvar = {}
+        if d == 1:
+            Qvar = Fsets 
+        
+        const_keys_to_add = []; var_keys_to_add = []
+        for f_key in Fsets_keys:
+            if type(f_key) == int:
+                var_keys_to_add.append(f_key)
+            elif len(f_key) == 2:
+                if f_key[0] != f_key[1]:
+                    const_keys_to_add.append(f_key)
+
+        for c_key in const_keys_to_add:
+            Qconst[c_key] = Fsets[c_key]
+
+        for v_key in var_keys_to_add:
+            Qvar[v_key] = Fsets[v_key]
+
+        return Qconst,Qvar
+
+    def buildA(self):
+        [LeftAconst, LeftAvar] = self.L.buildA()
+        [RightAconst, RightAvar] = self.R.buildA()
+
+
+        A = LeftAconst | LeftAvar | RightAconst | RightAvar
+        # print("A = ",A)
+        a_keys = A.keys()
+
+        a_const_keys_to_add = LeftAconst.keys() & RightAconst.keys()
+        Aconst = {}
+        for a in a_const_keys_to_add:
+            Aconst[a] = A[a]
+
+        a_var_keys_to_add = []
+        Avar = {}
+        for a in a_keys:
+            if a not in Aconst:
+                a_var_keys_to_add.append(a)
+
+        for a in a_var_keys_to_add:
+            Avar[a] = A[a]
+
+        return Aconst, Avar 
 
 
 def Dot(a, b):
@@ -252,6 +458,8 @@ class CrossProductExpr(BinaryExpr):
 class QuotientExpr(BinaryArithmeticOp):
     def __init__(self, L, R):
         super().__init__(L, R, L.shape())
+        self.L = L 
+        self.R = R
 
     def opString(self):
         return '/'
@@ -261,11 +469,91 @@ class QuotientExpr(BinaryArithmeticOp):
             return True
         return False
 
+    def buildQ(self, d):
+        Fsets = self.buildAllFUpToOrder(d)
+        
+        #none are constant
+        Qconst = {}
+
+        Qvar = Fsets
+
+        Qvar_keys = Qvar.keys()
+        keys_to_remove = []
+
+        for Q in Qvar_keys:
+            if type(Q) == int:
+                continue
+            else:
+                num_zeros = Q.count(0)
+                if num_zeros >= 2:
+                    keys_to_remove.append(Q)
+
+        for key in keys_to_remove:
+            del Qvar[key]
+
+        return([Qconst,Qvar])
+
+    def buildA(self):
+        [LeftAconst, LeftAvar] = self.L.buildA()
+        [RightAconst, RightAvar] = self.R.buildA()
+
+        A = LeftAconst | LeftAvar | RightAconst | RightAvar
+        a_keys = A.keys()
+
+        a_const_keys_to_add = LeftAconst.keys() & RightAconst.keys()
+        Aconst = {}
+        for a in a_const_keys_to_add:
+            Aconst[a] = A[a]
+
+        a_var_keys_to_add = []
+        Avar = {}
+        for a in a_keys:
+            if a not in Aconst:
+                a_var_keys_to_add.append(a)
+
+        for a in a_var_keys_to_add:
+            Avar[a] = A[a]
+
+        return Aconst, Avar 
 
 
 class PowerExpr(BinaryExpr):
     def __init__(self, L, R):
         super().__init__(L, R, ScalarShape())
+        self.L = L 
+        self.R = R
 
     def __str__(self):
         return 'pow({},{})'.format(self.left(), self.right())
+
+    def buildQ(self, d):
+        Fsets = self.buildAllFUpToOrder(d)
+        #no derivatives are constant
+        Qconst = {}
+        #all derivatives are variable
+        Qvar = Fsets
+
+        return([Qconst,Qvar])
+
+    def buildA(self):
+        [LeftAconst, LeftAvar] = self.L.buildA()
+        [RightAconst, RightAvar] = self.R.buildA()
+
+        A = LeftAconst | LeftAvar | RightAconst | RightAvar
+        a_keys = A.keys()
+
+        a_const_keys_to_add = LeftAconst.keys() & RightAconst.keys()
+        Aconst = {}
+        for a in a_const_keys_to_add:
+            Aconst[a] = A[a]
+
+        a_var_keys_to_add = []
+        Avar = {}
+        for a in a_keys:
+            if a not in Aconst:
+                a_var_keys_to_add.append(a)
+
+        for a in a_var_keys_to_add:
+            Avar[a] = A[a]
+
+        return Aconst, Avar 

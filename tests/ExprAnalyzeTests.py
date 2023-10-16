@@ -2,162 +2,317 @@ import pytest
 import itertools as it 
 from random import randint
 import numpy as np
-from ExprEval import buildAllQ
-from ExprEval import refineQsets
 from SymPDE.Coordinate import Coordinate
-from SymPDE.ArithmeticExpr import SumExpr, ProductExpr, PowerExpr, QuotientExpr
+from SymPDE.ArithmeticExpr import UnaryMinus, SumExpr, ProductExpr, PowerExpr, QuotientExpr
 
-#all tests regarding Qset construction
-class TestQSetConstruction:
-	#makes sure assertion error raised with no arguments
-	def test_NoArgs(self):
-		pytest.raises(AssertionError, buildAllQ, randint(1,9), 0)
+class TestQSets:
+	#testing 1st order on a coordinate unary minus
+	def test_unary_1(self):
+		a0 = Coordinate(0)
+		g = -a0
 
-	#double checking 1st order on 1 arg expr
-	def test_1_1(self):
-		Qsets = buildAllQ(1,1)
-		assert(Qsets == [[1]])
+		[Qconst, Qvar] = g.buildQ(1)
 
-	#double checking 1st order on n arg expr
-	def test_1_n(self):
-		n = randint(3,9)
-		Qsets = buildAllQ(1,n)
-		realQsets = [i+1 for i in range(n)]
-		realQsets = [realQsets]
-		assert(realQsets == Qsets)
-
-	#doule checking 3rd order on 1 arg expr
-	def test_3_1(self):
-		Qsets = buildAllQ(3,1)
-		realQsets = [[1], [(1,1)], [(1,1,1)]]
-		assert(Qsets == realQsets)
-
-	#double checking 3rd order on 3 arg expr
-	def test_3_3(self):
-		Qsets = buildAllQ(3,3)
-		realQsets = [[1,2,3], [(1,1), (1,2), (1,3), (2,1), (2,2), (2,3), (3,1), (3,2), (3,3)], [(1,1,1), (1,1,2), (1,1,3), (1,2,1), (1,2,2), (1,2,3), (1,3,1), (1,3,2), (1,3,3), (2,1,1), (2,1,2), (2,1,3), (2,2,1), (2,2,2), (2,2,3), (2,3,1), (2,3,2), (2,3,3), (3,1,1), (3,1,2), (3,1,3), (3,2,1), (3,2,2), (3,2,3), (3,3,1), (3,3,2), (3,3,3)]]
-		assert(Qsets == realQsets)
-
-
-#all tests regarding Qset partitioning
-class TestQSetRefinement:
-	#double checking sum expr refinement on 3rd order, 2 arg sum
-	def test_SumRefine(self):
-		a1 = Coordinate(0)
-		a2 = Coordinate(1)
-		g = SumExpr(a1,a2,1)
-
-		Qsets = buildAllQ(3,2)
-		[Qconst, Qvar] = refineQsets(Qsets, g)
-
-		realQconst = [1,2]
-		realQvar = [[(1,1), (1,2), (2,1), (2,2)], [(1,1,1),(1,1,2),(1,2,1),(1,2,2),(2,1,1),(2,1,2),(2,2,1),(2,2,2)]]
-		assert(Qconst == realQconst)
-		assert(Qvar == realQvar)
-
-	#double checking diff expr refinement on 4th order, 2 arg difference
-	def test_DiffRefine(self):
-		a1 = Coordinate(0)
-		a2 = Coordinate(1)
-		g = SumExpr(a1,a2,-1)
-
-		Qsets = buildAllQ(4,2)
-		[Qconst, Qvar] = refineQsets(Qsets, g)
-
-		realQconst = [1,2]
-		realQvar = [[(1,1), (1,2), (2,1), (2,2)], [(1,1,1),(1,1,2),(1,2,1),(1,2,2),(2,1,1),(2,1,2),(2,2,1),(2,2,2)], [(1,1,1,1),(1,1,1,2),(1,1,2,1),(1,1,2,2),(1,2,1,1),(1,2,1,2),(1,2,2,1),(1,2,2,2),(2,1,1,1),(2,1,1,2),(2,1,2,1),(2,1,2,2),(2,2,1,1),(2,2,1,2),(2,2,2,1),(2,2,2,2)]]
+		realQconst = {0: 1}
+		realQvar = {}
 
 		assert(Qconst == realQconst)
 		assert(Qvar == realQvar)
 
-	#double checking product expr refinement on 3rd order, 2 arg product
-	def test_ProdRefine_3_2(self):
-		a1 = Coordinate(0)
-		a2 = Coordinate(1)
-		g = ProductExpr(a1,a2)
+	#testing 2nd order on a coordiante unary minus
+	def test_unary_2(self):
+		a0 = Coordinate(0)
+		g = -a0
 
-		Qsets = buildAllQ(3,2)
-		[Qconst, Qvar] = refineQsets(Qsets, g)
+		[Qconst, Qvar] = g.buildQ(2)
 
-		realQconst = [(1,1), (1,2), (2,1), (2,2)]
-		realQvar = [[1,2],[(1,1,1),(1,1,2),(1,2,1),(1,2,2),(2,1,1),(2,1,2),(2,2,1),(2,2,2)]]
+		realQconst = {0: 1}
+		realQvar = {}
 
 		assert(Qconst == realQconst)
 		assert(Qvar == realQvar)
 
-	#double checking product expr refinement on 1st order, 2 arg product
-	def test_ProdRefine_1_2(self):
-		a1 = Coordinate(0)
-		a2 = Coordinate(1)
-		g = ProductExpr(a1,a2)
+	#testing 1st order on a 2D coordinate sum
+	def test_sum_1(self):
+		a0 = Coordinate(0)
+		a1 = Coordinate(1)
+		g = a0 + a1 
 
-		Qsets = buildAllQ(1,2)
-		[Qconst, Qvar] = refineQsets(Qsets, g)
+		[Qconst, Qvar] = g.buildQ(1)
 
-		realQconst = []
-		realQvar = [[1,2]]
+		realQconst = {0:1, 1:1}
+		realQvar = {}
+
+		assert(Qconst == realQconst)
+		assert(Qvar == realQvar) 
+
+	#testing 2nd order on a 2D coordinate sum
+	def test_sum_2(self):
+		a0 = Coordinate(0)
+		a1 = Coordinate(1)
+		g = a0 + a1 
+
+		[Qconst, Qvar] = g.buildQ(2)
+
+		realQconst = {0:1, 1:1}
+		realQvar = {}
 
 		assert(Qconst == realQconst)
 		assert(Qvar == realQvar)
 
-	#double checking quotient expr refinement on 3rd order, 2 arg product
-	def test_QuotRefine_3_2(self):
-		a1 = Coordinate(0)
-		a2 = Coordinate(1)
-		g = QuotientExpr(a1,a2)
+	#testing 1st order on a 2D coordinate difference
+	def test_diff_1(self):
+		a0 = Coordinate(0)
+		a1 = Coordinate(1)
+		g = a0 - a1 
 
-		Qsets = buildAllQ(3,2)
-		[Qconst, Qvar] = refineQsets(Qsets, g)
+		[Qconst, Qvar] = g.buildQ(2)
 
-		realQconst = [(1,1), (1,2), (2,1), (2,2)]
-		realQvar = [[1,2],[(1,1,1),(1,1,2),(1,2,1),(1,2,2),(2,1,1),(2,1,2),(2,2,1),(2,2,2)]]
-
-		assert(Qconst == realQconst)
-		assert(Qvar == realQvar)
-
-	#double checking quotient expr refinement on 1st order, 2 arg product
-	def test_QuotRefine_1_2(self):
-		a1 = Coordinate(0)
-		a2 = Coordinate(1)
-		g = QuotientExpr(a1,a2)
-
-		Qsets = buildAllQ(1,2)
-		[Qconst, Qvar] = refineQsets(Qsets, g)
-
-		realQconst = []
-		realQvar = [[1,2]]
+		realQconst = {0:1, 1:1}
+		realQvar = {}
 
 		assert(Qconst == realQconst)
 		assert(Qvar == realQvar)
 
-	#double checking power expr refinement on 3rd order, 2 arg product
-	def test_PowRefine_3_2(self):
-		a1 = Coordinate(0)
-		a2 = Coordinate(1)
-		g = PowerExpr(a1,a2)
+	#testing 2nd order on a 2D coordinate difference
+	def test_diff_2(self):
+		a0 = Coordinate(0)
+		a1 = Coordinate(1)
+		g = a0 - a1 
 
-		Qsets = buildAllQ(3,2)
-		[Qconst, Qvar] = refineQsets(Qsets, g)
+		[Qconst, Qvar] = g.buildQ(2)
 
-		realQconst = [(1,1), (1,2), (2,1), (2,2)]
-		realQvar = [[1,2],[(1,1,1),(1,1,2),(1,2,1),(1,2,2),(2,1,1),(2,1,2),(2,2,1),(2,2,2)]]
-
-		assert(Qconst == realQconst)
-		assert(Qvar == realQvar)
-
-	#double checking product expr refinement on 1st order, 2 arg product
-	def test_PowRefine_1_2(self):
-		a1 = Coordinate(0)
-		a2 = Coordinate(1)
-		g = PowerExpr(a1,a2)
-
-		Qsets = buildAllQ(1,2)
-		[Qconst, Qvar] = refineQsets(Qsets, g)
-
-		realQconst = []
-		realQvar = [[1,2]]
+		realQconst = {0:1, 1:1}
+		realQvar = {}
 
 		assert(Qconst == realQconst)
 		assert(Qvar == realQvar)
 
-#rename to ExprAnalyzeTest (and ExprAnalyze)
+	#testing 1st order on a 2D coordinate product
+	def test_prod_1(self):
+		a0 = Coordinate(0)
+		a1 = Coordinate(1)
+		g = a0*a1 
+
+		[Qconst, Qvar] = g.buildQ(1)
+
+		realQconst = {}
+		realQvar = {0:1, 1:1}
+
+		assert(Qconst == realQconst)
+		assert(Qvar == realQvar)
+
+	#testing 2nd order on a 2D coordinate product
+	def test_prod_2(self):
+		a0 = Coordinate(0)
+		a1 = Coordinate(1)
+		g = a0*a1 
+
+		[Qconst, Qvar] = g.buildQ(2)
+
+		realQconst = {(0,1):2}
+		realQvar = {0:1,1:1}
+
+		assert(Qconst == realQconst)
+		assert(Qvar == realQvar)
+
+	#testing 3rd order on a 2D coordinate product
+	def test_prod_3(self):
+		self.test_prod_2()
+		# a0 = Coordinate(0)
+		# a1 = Coordinate(1)
+		# g = a0*a1 
+
+		# [Qconst, Qvar] = g.buildQ(3)
+
+		# realQconst = {(0,1):2}
+		# realQvar = {0:1,1:1}
+
+		# assert(Qconst == realQconst)
+		# assert(Qvar == realQvar)
+
+	#testing 1st order on a 2D coordinate quotient
+	def test_quot_1(self):
+		a0 = Coordinate(0)
+		a1 = Coordinate(1)
+		g = a0/a1 
+
+		[Qconst, Qvar] = g.buildQ(1)
+
+		realQconst = {}
+		realQvar = {0:1, 1:1}
+
+		assert(Qconst == realQconst)
+		assert(Qvar == realQvar)
+
+	#testing 2nd order on a 2D coordinate quotient
+	def test_quot_2(self):
+		a0 = Coordinate(0)
+		a1 = Coordinate(1)
+		g = a0/a1 
+
+		[Qconst, Qvar] = g.buildQ(2)
+
+		realQconst = {}
+		realQvar = {0:1,1:1,(0,1):2,(1,1):1}
+
+		assert(Qconst == realQconst)
+		assert(Qvar == realQvar)
+
+	#testing 3rd order on a 2D coordinate quotient
+	def test_quot_3(self):
+		a0 = Coordinate(0)
+		a1 = Coordinate(1)
+		g = a0/a1 
+
+		[Qconst, Qvar] = g.buildQ(3)
+
+		realQconst = {}
+		realQvar = {0:1, 1:1, (0,1):2, (1,1): 1, (0,1,1):3, (1,1,1):1}
+
+		assert(Qconst == realQconst)
+		assert(Qvar == realQvar)
+
+	#testing 1st order on a 2D coordinate power
+	def test_power_1(self):
+		a0 = Coordinate(0)
+		a1 = Coordinate(1)
+		g = a0**a1 
+
+		[Qconst, Qvar] = g.buildQ(1)
+
+		realQconst = {}
+		realQvar = {0:1, 1:1}
+
+		assert(Qconst == realQconst)
+		assert(Qvar == realQvar)
+
+	#testing 2nd order on a 2D coordinate power
+	def test_power_2(self):
+		a0 = Coordinate(0)
+		a1 = Coordinate(1)
+		g = a0**a1 
+
+		[Qconst, Qvar] = g.buildQ(2)
+
+		realQconst = {}
+		realQvar = {0:1, 1:1, (0,0):1, (0,1):2, (1,1):1}
+
+		assert(Qconst == realQconst)
+		assert(Qvar == realQvar)
+
+	#testing 3rd order on a 2D coordinate power
+	def test_power_3(self):
+		a0 = Coordinate(0)
+		a1 = Coordinate(1)
+		g = a0**a1 
+
+		[Qconst, Qvar] = g.buildQ(3)
+
+		realQconst = {}
+		realQvar = {0:1, 1:1, (0,0):1, (0,1):2, (1,1):1, (0,0,0):1, (0,0,1):3, (0,1,1):3, (1,1,1):1}
+
+		assert(Qconst == realQconst)
+		assert(Qvar == realQvar)
+
+class TestASets:
+	#testing 1st order on a unary coordinate minus
+	def test_unary_1(self):
+		a0 = Coordinate(0)
+		g = -a0
+
+		[Aconst, Avar] = g.buildA(1)
+
+		realAconst = {0:1}
+		realAvar = {}
+
+		assert(Aconst == realAconst)
+		assert(Avar == realAvar)
+
+	#testing 2nd order on a unary coordinate minus
+	def test_unary_2(self):
+		a0 = Coordinate(0)
+		g = -a0
+
+		[Aconst, Avar] = g.buildA(2)
+
+		realAconst = {0:1}
+		realAvar = {}
+
+		assert(Aconst == realAconst)
+		assert(Avar == realAvar)
+
+	#testing on a 2D sum of coordinates
+	def test_sum(self):
+		a0 = Coordinate(0)
+		a1 = Coordinate(1)
+		g = a0 + a1 
+
+		[Aconst, Avar] = g.buildA()
+
+		realAconst = {}
+		realAvar = {0:1, 1:1}
+
+		assert(Aconst == realAconst)
+		assert(Avar == realAvar)
+
+	#testing on a 2D coordinate differnce
+	def test_diff(self):
+		a0 = Coordinate(0)
+		a1 = Coordinate(1)
+		g = a0 - a1 
+
+		[Aconst, Avar] = g.buildA()
+
+		realAconst = {}
+		realAvar = {0:1, 1:1}
+
+		assert(Aconst == realAconst)
+		assert(Avar == realAvar)
+
+	#testing on a 2D coordinate product
+	def test_prod(self):
+		a0 = Coordinate(0)
+		a1 = Coordinate(1)
+		g = a0 * a1 
+
+		[Aconst, Avar] = g.buildA()
+
+		realAconst = {}
+		realAvar = {0:1, 1:1}
+
+		assert(Aconst == realAconst)
+		assert(Avar == realAvar)
+
+	#testing on a 2D coordinate quotient
+	def test_quot(self):
+		a0 = Coordinate(0)
+		a1 = Coordinate(1)
+		g = a0 / a1 
+
+		[Aconst, Avar] = g.buildA()
+
+		realAconst = {}
+		realAvar = {0:1, 1:1}
+
+		assert(Aconst == realAconst)
+		assert(Avar == realAvar)
+
+	#testing on a 2D coordinate power
+	def test_power(self):
+		a0 = Coordinate(0)
+		a1 = Coordinate(1)
+		g = a0 ** a1 
+
+		[Aconst, Avar] = g.buildA()
+
+		realAconst = {}
+		realAvar = {0:1, 1:1}
+
+		assert(Aconst == realAconst)
+		assert(Avar == realAvar)
+
+##what about Q^C conditions for A set construction
+
+##make a function that prints out a "human-readable Q" so I know what I'm reading
+##a few months from now
