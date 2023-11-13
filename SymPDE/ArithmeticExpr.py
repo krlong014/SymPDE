@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from numpy.linalg import norm
 import itertools as it
 from scipy.special import binom
+from collections.abc import Iterable
 
 #############################################################################
 #
@@ -148,7 +149,7 @@ class ExprWithChildren(Expr):
 
         return FwithMults
 
-    #builds all Q sets of order d or less
+    #builds all F sets up to oder d
     def buildAllFUpToOrder(self,d):
         n = len(self._children)
         assert(n >= 1)
@@ -159,28 +160,162 @@ class ExprWithChildren(Expr):
 
         return Fsets
 
-    #builds a particular A set of order d
-    def buildAForOrder(self,d):
+    #builds all Q sets up to order d
+    def buildQUpToOrder(self,d):
+        Qconst = {}; Qvar = {}
+
+        for i in range(d):
+            [this_Qconst, this_Qvar] = self.buildQForOrder(i+1)
+            Qconst = Qconst | this_Qconst
+            Qvar = Qvar | this_Qvar
+
+        return(Qconst, Qvar)
+
+    #builds A set for order d
+    def buildAForOrder(self,order):
         n = len(self._children)
         assert(n >= 1)
 
-        A = []
-        for i in range(n):
-            A.append(self.child(i).buildAForOrder(d))
+        if order == 1:
+            [Qconst_order_1, Qvar_order_1] = self.buildQForOrder(1)
 
-        return A
+            Aconst = {}; Avar = {}
+            for q in Qconst_order_1:
+                [this_Aconst, this_Avar] = self.child(q).buildAForOrder(1)
+                Aconst = Aconst | this_Aconst
+                Avar = Avar | this_Avar
 
-    #builds all A sets of order d or less
-    def buildAllAUpToOrder(self,d):
-        n = len(self._children)
-        assert (n >= 1)
+            for q in Qvar_order_1:
+                [this_Aconst, this_Avar] = self.child(q).buildAForOrder(1)
+                Avar = Avar | this_Aconst | this_Avar
 
-        Asets = []
-        for i in range(d):
-            Asets.append(self.buildAForOrder(i+1))
+        if order == 2:
+            [Qconst_order_1, Qvar_order_1] = self.buildQForOrder(1)
 
-        return Asets
+            A2_term_const = {}; A2_term_var = {}
+            for q in Qconst_order_1:
+                [this_Aconst, this_Avar] = self.child(q).buildAForOrder(2)
+                A2_term_const = A2_term_const | this_Aconst
+                A2_term_var = A2_term_var | this_Avar
 
+            for q in Qvar_order_1:
+                [this_Aconst, this_Avar] = self.child(q).buildAForOrder(2)
+                A2_term_var = A2_term_var | this_Aconst | this_Avar
+
+            [Qconst_order_2, Qvar_order_2] = self.buildQForOrder(2)
+
+            A1_term_const = {}; A1_term_var = {}
+            for q in Qconst_order_2:
+                [this_Aconst_0, this_Avar_0] = self.child(q[0]).buildAForOrder(1)
+                [this_Aconst_1, this_Avar_1] = self.child(q[1]).buildAForOrder(1)
+                this_Aconst = list(zip(this_Aconst_0, this_Aconst_1))
+                this_Avar = list(zip(this_Avar_0, this_Avar_1))
+
+                for item in this_Aconst:
+                    A1_term_const[item] = Qconst_order_2[item]
+                for item in this_Avar:
+                    A1_term_var[item] = Qvar_order_2[item]
+
+            for q in Qvar_order_2:
+                [this_Aconst_0, this_Avar_0] = self.child(q[0]).buildAForOrder(1)
+                [this_Aconst_1, this_Avar_1] = self.child(q[1]).buildAForOrder(1)
+                this_Aconst = list(zip(this_Aconst_0, this_Aconst_1))
+                this_Avar = list(zip(this_Avar_0, this_Avar_1))
+
+                for item in this_Aconst:
+                    A1_term_var[item] = Qvar_order_2[item]
+                for item in this_Avar:
+                    A1_term_var[item] = Qvar_order_2[item]
+
+            Aconst = A1_term_const | A2_term_const
+            Avar = A1_term_var | A2_term_var 
+        if order == 3:
+            [Qconst_order_1, Qvar_order_1] = self.buildQForOrder(1)
+            Q1 = Qconst_order_1 | Qvar_order_1
+
+            A3_term_const = {}; A3_term_var = {}
+            for q in Qconst_order_1:
+                [this_Aconst,this_Avar] = self.child(q).buildAForOrder(3)
+                A3_term_const = A3_term_const | this_Aconst
+                A3_term_var = A3_term_var | this_Avar
+
+            [Qconst_order_2, Qvar_order_2] = self.buildQForOrder(2)
+            Q2 = Qconst_order_2 | Qvar_order_2
+
+            A2_term_const = {}; A2_term_var = {}
+            for q in Qconst_order_2:
+                [this_Aconst_0,this_Avar_0] = self.child(q[0]).buildAForOrder(1)
+                [this_Aconst_1,this_Avar_1] = self.child(q[1]).buildAForOrder(2)
+                this_Aconst = list(zip(this_Aconst_0, this_Aconst_1))
+                this_Avar = list(zip(this_Avar_0,this_Avar_1))
+                for item in this_Aconst:
+                    A2_term_const[item] = Q2[item]
+                for item in this_Avar:
+                    A2_term_var[item] = Q2[item]
+
+            [Qconst_order_3, Qvar_order_3] = self.buildQForOrder(3)
+            Q3 = Qconst_order_3 | Qvar_order_3
+
+            A1_term_const = {}; A1_term_var = {}
+            for q in Qconst_order_3:
+                [this_Aconst_0,this_Avar_0] = self.child(q[0]).buildAForOrder(1)
+                [this_Aconst_1,this_Avar_1] = self.child(q[1]).buildAForOrder(1)
+                [this_Aconst_2,this_Avar_2] = self.child(q[2]).buildAForOrder(1)
+                this_Aconst = list(zip(this_Aconst_0,this_Aconst_1,this_Aconst_2))
+                this_Avar = list(zip(this_Avar_0,this_Avar_1,this_Avar_2))
+                for item in this_Aconst:
+                    A1_term_const[item] = Q3[item]
+                for item in this_Avar:
+                    A1_term_var[item] = Q3[item]
+
+            A1_term_var = Q3
+            for q in Q3:
+                if q in A1_term_const:
+                    del A1_term_var[q]
+
+            Aconst = A3_term_const | A2_term_const | A1_term_const
+
+            Avar = A3_term_var | A2_term_var | A1_term_var 
+        return Aconst, Avar 
+
+    #builds all A sets up to order d
+    def buildAUpToOrder(self,order):
+        Aconst = {}; Avar = {}
+        for i in range(order):
+            [this_Aconst, this_Avar] = self.buildAForOrder(i+1)
+            Aconst = Aconst | this_Aconst
+            Avar = Avar | this_Avar
+        return Aconst, Avar
+
+    #builds a dictionary of required derivatives with order d and 
+    #their multiplicites given petitioning sets
+    def buildR(self,Petitions):
+        max_order = len(Petitions)
+        print("max_order = ", max_order)
+
+        ##QUESTION: Atm I'm getting the info from each argument, but not from the operation. What's wrong?
+        Rconst = []; Rvar = []
+        for d in range(1,max_order+1):
+            print("d = ",d)
+            [this_Aconst, this_Avar] = self.buildAForOrder(d)
+            RC = {}; RV = {}
+            for P in Petitions[d-1]:
+                print("P = ",P)
+                for item in this_Aconst:
+                    print("item = {}, P = {}".format(item,P))
+                    if (item == P) or (isinstance(P,Iterable) and item in P):
+                        RC[item] = this_Aconst[item]
+                for item in this_Avar:
+                    if (item == P) or (isinstance(P,Iterable) and item in P):
+                        RV[item] = this_Avar[item]
+
+            if RC != {}:
+                Rconst.append(RC)
+            
+            if RV != {}:
+                Rvar.append(RV)
+
+        return Rconst, Rvar
 
 class UnaryExpr(ExprWithChildren):
     def __init__(self, arg, shape):
@@ -208,22 +343,29 @@ class UnaryMinus(UnaryExpr):
     def isLinearInTests(self):
         return self.arg().isLinearInTests()
 
-    def buildQ(self,d):
-        Fsets = self.buildAllFUpToOrder(d)
-        Fsets_keys = list(Fsets.keys())
-
-        f_key = Fsets_keys[0]
-
-        Qconst = {}
-        Qconst[f_key] = Fsets[f_key]
+    def buildQForOrder(self,d):
+        F = self.buildFForOrder(d)
+        
         Qvar = {}
+        if d == 1:
+            Qconst = {0:1}
+        else:
+            Qconst = {}
 
-        return Qconst,Qvar
+        return Qconst, Qvar
+
 
     def buildA(self,d):
         [Aconst, Avar] = self.arg.buildA()
         return Aconst, Avar
 
+    def printQ(self,d):
+        [Qconst, Qvar] = self.buildQ(d)
+
+        for Q in Qconst:
+            print("Qconst contains the derivative {}, which has multiplicity {}".format(Q,Qconst[Q]))
+        for Q in Qvar:
+            print("Qvar contains the derivative {}, which has multiplicity {}".format(Q,Qvar[Q]))
 
 
 class BinaryExpr(ExprWithChildren):
@@ -291,47 +433,29 @@ class SumExpr(BinaryArithmeticOp):
         Fsets = self.buildAllFUpToOrder(d)
         return Fsets
 
-    def buildQ(self,d):
-        Fsets = self.buildAllFUpToOrder(d)
-        Fsets_keys = Fsets.keys()
-        # Qconst = Fsets[0]
+    def buildQForOrder(self,d):
+        F = self.buildFForOrder(d)
+        F_keys = F.keys()
 
         Qconst = {}; Qvar = {}
         const_keys_to_add = []
-        for key in Fsets_keys:
-            if type(key) == int:
+        if d == 1:
+            for key in F_keys:
                 const_keys_to_add.append(key)
-
+        
         for key in const_keys_to_add:
-            Qconst[key] = Fsets[key]
+            Qconst[key] = F[key]
 
-        return [Qconst,Qvar]
+        return Qconst, Qvar 
 
-    def buildA(self):
-        [LeftAconst, LeftAvar] = self.L.buildA()
-        [RightAconst, RightAvar] = self.R.buildA()
+    def printQ(self,d):
+        [Qconst, Qvar] = self.buildQ(d)
 
-        A = LeftAconst | LeftAvar | RightAvar | RightAconst
-        a_keys = A.keys()
+        for Q in Qconst:
+            print("Qconst contains the derivative {}, which has multiplicity {}".format(Q,Qconst[Q]))
+        for Q in Qvar:
+            print("Qvar contains the derivative {}, which has multiplicity {}".format(Q,Qvar[Q]))
 
-        Aconst = {}
-        a_const_keys_to_add = LeftAconst.keys() & RightAconst.keys()
-        for a in a_const_keys_to_add:
-            Aconst[a] = A[a]
-        
-        Avar = {}
-        a_var_keys_to_add = []
-        for a in a_keys:
-            if a not in Aconst:
-                a_var_keys_to_add.append(a)
-
-        for a in a_var_keys_to_add:
-            Avar[a] = A[a]
-
-        return Aconst, Avar
-
-    # def buildR(self,d):
-        
 
 
 class ProductExpr(BinaryArithmeticOp):
@@ -354,55 +478,31 @@ class ProductExpr(BinaryArithmeticOp):
             return True
         return False
 
-    def buildQ(self, d):
-        assert(type(d)==int)
-        Fsets = self.buildAllFUpToOrder(d)
-        Fsets_keys = Fsets.keys()
+    def buildQForOrder(self,d):
+        F = self.buildFForOrder(d)
+        F_keys = F.keys()
 
         Qconst = {}; Qvar = {}
         if d == 1:
-            Qvar = Fsets 
-        
-        const_keys_to_add = []; var_keys_to_add = []
-        for f_key in Fsets_keys:
-            if type(f_key) == int:
-                var_keys_to_add.append(f_key)
-            elif len(f_key) == 2:
-                if f_key[0] != f_key[1]:
-                    const_keys_to_add.append(f_key)
+            Qvar = F 
+        elif d == 2:
+            const_keys_to_add = []
+            for key in F_keys:
+                if key[0] != key[1]:
+                    const_keys_to_add.append(key)
 
-        for c_key in const_keys_to_add:
-            Qconst[c_key] = Fsets[c_key]
+            for key in const_keys_to_add:
+                Qconst[key] = F[key]
 
-        for v_key in var_keys_to_add:
-            Qvar[v_key] = Fsets[v_key]
+        return Qconst, Qvar 
 
-        return Qconst,Qvar
+    def printQ(self,d):
+        [Qconst, Qvar] = self.buildQ(d)
 
-    def buildA(self):
-        [LeftAconst, LeftAvar] = self.L.buildA()
-        [RightAconst, RightAvar] = self.R.buildA()
-
-
-        A = LeftAconst | LeftAvar | RightAconst | RightAvar
-        # print("A = ",A)
-        a_keys = A.keys()
-
-        a_const_keys_to_add = LeftAconst.keys() & RightAconst.keys()
-        Aconst = {}
-        for a in a_const_keys_to_add:
-            Aconst[a] = A[a]
-
-        a_var_keys_to_add = []
-        Avar = {}
-        for a in a_keys:
-            if a not in Aconst:
-                a_var_keys_to_add.append(a)
-
-        for a in a_var_keys_to_add:
-            Avar[a] = A[a]
-
-        return Aconst, Avar 
+        for Q in Qconst:
+            print("Qconst contains the derivative {}, which has multiplicity {}".format(Q,Qconst[Q]))
+        for Q in Qvar:
+            print("Qvar contains the derivative {}, which has multiplicity {}".format(Q,Qvar[Q]))
 
 
 def Dot(a, b):
@@ -469,53 +569,30 @@ class QuotientExpr(BinaryArithmeticOp):
             return True
         return False
 
-    def buildQ(self, d):
-        Fsets = self.buildAllFUpToOrder(d)
-        
-        #none are constant
-        Qconst = {}
+    def buildQForOrder(self,d):
+        F = self.buildFForOrder(d)
+        F_keys = F.keys()
 
-        Qvar = Fsets
-
-        Qvar_keys = Qvar.keys()
-        keys_to_remove = []
-
-        for Q in Qvar_keys:
-            if type(Q) == int:
-                continue
-            else:
+        Qconst = {}; Qvar = F 
+        if d >= 2:
+            keys_to_remove = []
+            for Q in Qvar:
                 num_zeros = Q.count(0)
                 if num_zeros >= 2:
                     keys_to_remove.append(Q)
 
-        for key in keys_to_remove:
-            del Qvar[key]
+            for key in keys_to_remove:
+                del Qvar[key]
 
-        return([Qconst,Qvar])
+        return Qconst, Qvar 
 
-    def buildA(self):
-        [LeftAconst, LeftAvar] = self.L.buildA()
-        [RightAconst, RightAvar] = self.R.buildA()
+    def printQ(self,d):
+        [Qconst, Qvar] = self.buildQ(d)
 
-        A = LeftAconst | LeftAvar | RightAconst | RightAvar
-        a_keys = A.keys()
-
-        a_const_keys_to_add = LeftAconst.keys() & RightAconst.keys()
-        Aconst = {}
-        for a in a_const_keys_to_add:
-            Aconst[a] = A[a]
-
-        a_var_keys_to_add = []
-        Avar = {}
-        for a in a_keys:
-            if a not in Aconst:
-                a_var_keys_to_add.append(a)
-
-        for a in a_var_keys_to_add:
-            Avar[a] = A[a]
-
-        return Aconst, Avar 
-
+        for Q in Qconst:
+            print("Qconst contains the derivative {}, which has multiplicity {}".format(Q,Qconst[Q]))
+        for Q in Qvar:
+            print("Qvar contains the derivative {}, which has multiplicity {}".format(Q,Qvar[Q]))
 
 class PowerExpr(BinaryExpr):
     def __init__(self, L, R):
@@ -526,34 +603,16 @@ class PowerExpr(BinaryExpr):
     def __str__(self):
         return 'pow({},{})'.format(self.left(), self.right())
 
-    def buildQ(self, d):
-        Fsets = self.buildAllFUpToOrder(d)
-        #no derivatives are constant
-        Qconst = {}
-        #all derivatives are variable
-        Qvar = Fsets
+    def buildQForOrder(self,d):
+        F = self.buildFForOrder(d)
 
-        return([Qconst,Qvar])
+        Qconst = {}; Qvar = F 
+        return Qconst, Qvar 
 
-    def buildA(self):
-        [LeftAconst, LeftAvar] = self.L.buildA()
-        [RightAconst, RightAvar] = self.R.buildA()
+    def printQ(self,d):
+        [Qconst, Qvar] = self.buildQ(d)
 
-        A = LeftAconst | LeftAvar | RightAconst | RightAvar
-        a_keys = A.keys()
-
-        a_const_keys_to_add = LeftAconst.keys() & RightAconst.keys()
-        Aconst = {}
-        for a in a_const_keys_to_add:
-            Aconst[a] = A[a]
-
-        a_var_keys_to_add = []
-        Avar = {}
-        for a in a_keys:
-            if a not in Aconst:
-                a_var_keys_to_add.append(a)
-
-        for a in a_var_keys_to_add:
-            Avar[a] = A[a]
-
-        return Aconst, Avar 
+        for Q in Qconst:
+            print("Qconst contains the derivative {}, which has multiplicity {}".format(Q,Qconst[Q]))
+        for Q in Qvar:
+            print("Qvar contains the derivative {}, which has multiplicity {}".format(Q,Qvar[Q]))
