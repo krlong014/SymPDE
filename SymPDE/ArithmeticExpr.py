@@ -291,18 +291,13 @@ class ExprWithChildren(Expr):
     #their multiplicites given petitioning sets
     def buildR(self,Petitions):
         max_order = len(Petitions)
-        print("max_order = ", max_order)
 
-        ##QUESTION: Atm I'm getting the info from each argument, but not from the operation. What's wrong?
         Rconst = []; Rvar = []
         for d in range(1,max_order+1):
-            print("d = ",d)
             [this_Aconst, this_Avar] = self.buildAForOrder(d)
             RC = {}; RV = {}
             for P in Petitions[d-1]:
-                print("P = ",P)
                 for item in this_Aconst:
-                    print("item = {}, P = {}".format(item,P))
                     if (item == P) or (isinstance(P,Iterable) and item in P):
                         RC[item] = this_Aconst[item]
                 for item in this_Avar:
