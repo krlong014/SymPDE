@@ -6,6 +6,8 @@
 
 from . Expr import Expr
 from . ExprShape import ScalarShape
+from scipy.special import binom
+
 
 
 class Coordinate(Expr):
@@ -33,3 +35,40 @@ class Coordinate(Expr):
 
     def direction(self):
         return self._dir
+
+    def buildAForOrder(self,d):
+        Avar = {}
+        if d == 1:
+            Aconst = {self._dir : 1}
+        else:
+            Aconst = {}
+
+        return Aconst, Avar
+
+
+
+    # def buildAForOrder(self,d):
+    #     if d == 1:
+    #         A = [self._dir] 
+    #     else:
+    #         A = []
+
+    #     if len(A) != 0:
+    #         mults = [[int(binom(d,i)) for i in range(len(A))]]
+    #         A = [A + mults]
+
+    #     return A 
+
+    def buildAllAUpToOrder(self,d):
+        Asets = []
+        for i in range(d):
+            Asets.append(self.buildAForOrder(i+1))
+
+        return Asets 
+
+    # def buildA(self,d):
+    #     Avar = {}
+    #     Aconst = {self._dir : 1}
+    #     return Aconst, Avar
+
+

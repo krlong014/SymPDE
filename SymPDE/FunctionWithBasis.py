@@ -155,7 +155,10 @@ class ScalarTestFunction(FunctionWithScalarBasis):
     def __repr__(self):
         return 'ScalarTestFunction(name={}, bas={})'.format(self._name,
                                                             self.basis())
-
+    def buildA(self,d):
+        Aconst = {self._name : 1}
+        Avar = {}
+        return Aconst, Avar 
 
 
 
@@ -192,6 +195,7 @@ def TestFunction(basis, name):
         raise('TestFunction expected scalar or vector basis, got [{}]'.format(basis))
 
 
+
 # -----------------------------------------------------------------------------
 # Unknown function
 # -----------------------------------------------------------------------------
@@ -208,6 +212,10 @@ class ScalarUnknownFunction(FunctionWithScalarBasis):
         return 'ScalarUnknownFunction(name={}, bas={})'.format(self.name(),
                                                             self.basis())
 
+    def buildA(self,d):
+        Aconst = {self._name : 1}
+        Avar = {}
+        return Aconst, Avar 
 
 class VectorUnknownFunction(FunctionWithVectorBasis):
     def __init__(self, basis, name):
