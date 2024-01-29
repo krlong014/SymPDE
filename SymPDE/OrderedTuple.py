@@ -13,7 +13,7 @@ class OrderedTuple:
     """
     def __init__(self, elems):
         if len(elems)==1:
-            self.elems=(elems,)
+            self.elems=tuple(elems,)
         else:
             tmp = []
             for e in elems:
@@ -37,9 +37,7 @@ class OrderedTuple:
 
     def __repr__(self):
         return 'OrderedTuple(' + str(self) + ')'
-
-
-
+    
     def __hash__(self):
         return hash(self.elems)
 
@@ -56,6 +54,24 @@ class OrderedTuple:
             if me > you:
                 return False
         return False
+    
+    def merge(self, other):
+        tmp = []
+        for mine in self.elems:
+          tmp.append(mine)
+
+        for yours in other:
+          tmp.append(yours)
+        
+        return OrderedTuple(tmp)
+    
+    def insert(self, other):
+        tmp = []
+        for mine in self.elems:
+          tmp.append(mine)
+        tmp.append(other)
+
+        return OrderedTuple(tmp)
 
 
 if __name__=='__main__':
@@ -70,9 +86,23 @@ if __name__=='__main__':
     print(s)
 
     x = OrderedTuple([B,A])
-    print(x)
+    print('x=', x)
 
-    d = {'Bob':1, 'Joe':2}
+    y = B.merge(A)
+    print('y=', y)
+
+    z = B.merge(A).insert(1.5)
+    print('z=', z)
+
+    d = {
+        A : 'A',
+        B : 'B',
+        x : 'x',
+        y : 'y',
+        z : 'z'
+    }
+
     print(d)
-    s2 = {1,2,3,4}
-    print(s2)
+
+
+
