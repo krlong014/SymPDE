@@ -36,6 +36,9 @@ class Coordinate(Expr):
     def direction(self):
         return self._dir
 
+    def name(self):
+        return self._name
+
     def buildAForOrder(self,d):
         Avar = {}
         if d == 1:
