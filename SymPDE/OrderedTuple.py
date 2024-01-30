@@ -1,5 +1,7 @@
 from functools import total_ordering
 
+# KRL to do: make this iterable
+
 @total_ordering
 class OrderedTuple:
     """

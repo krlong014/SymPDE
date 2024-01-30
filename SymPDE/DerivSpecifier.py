@@ -5,7 +5,7 @@ from . Lagrange import Lagrange
 from . OrderedTuple import OrderedTuple
 from . Coordinate import Coordinate
 
-
+# KRL to do: distinguist test vs unknown vs parameter
 
 @total_ordering
 class DerivSpecifier:

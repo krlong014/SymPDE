@@ -22,11 +22,12 @@ if __name__=='__main__':
 
     s = {I_v, I_u, dx_v, dy_v, grad_v, grad_u, x, y}
 
-    print(s)
+    #print(s)
 
     lam = MultipleDeriv([x,])
     mu = MultipleDeriv([I_u, dx_v, I_u])
     nu = MultipleDeriv([grad_v, I_v, x])
+    print('lambda=',lam)
     print('mu=',mu)
     print('nu=',nu)
 
