@@ -4,17 +4,21 @@ from SymPDE.Coordinate import Coordinate
 from SymPDE.ArithmeticExpr import SumExpr, ProductExpr, PowerExpr, QuotientExpr
 import SymPDE.FunctionWithBasis as fwb
 from SymPDE.BasisBase import BasisBase, ScalarBasisBase
+from MakeEval import makeEval 
+# from SymPDE.ExprEval import ExprWithChildrenEval
 
-a0 = Coordinate(0) #u
-a1 = Coordinate(1) #v
-g = a0 * a1
+x = Coordinate(0)
+y = Coordinate(1)
 
-P1 = {1:1}
-P2 = {(0,1):2}
-Petitions = [P1, P2]
-[Rconst, Rvar] = g.buildR(Petitions)
-print("Rconst = {}, Rvar = {}".format(Rconst,Rvar))
+g = -x
+g_eval = makeEval(g)
+# Qconst, Qvar = g.buildQForOrder(1)
+# print("Qconst = {}, Qvar = {}".format(Qconst,Qvar))
 
-##finish d = 3 case 
-##rebuild tests
-##buildR command
+#we need a serparate entity that builds an 
+	#evaluator based on the expression.
+
+	#something like 
+	#g_eval = makeEval(g)
+
+	#then we can just write g_eval.buildQ

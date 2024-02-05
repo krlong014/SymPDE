@@ -1,17 +1,27 @@
-from . Expr import Expr
-from . ExprShape import ScalarShape, VectorShape
+from SymPDE.Expr import Expr
+from SymPDE.ExprShape import ScalarShape, VectorShape
 from SymPDE.Coordinate import Coordinate
 from abc import ABC, abstractmethod
 from numpy.linalg import norm
 import itertools as it
 from scipy.special import binom
 from collections.abc import Iterable
-
+# from SymPDE.DerivSpecifier import DerivSpecifier
 #############################################################################
 #
 # Fundamental Expr subtypes for arithmetic operations
 #
 #############################################################################
+
+
+#PROBLEM: Using DerivSpecifier here causes a circular import
+    #because of FWB. This means I can't actually change the
+    #A/Q set construction in here to use the DerivSpecifier
+
+#QUESTION: Do I need to move the set construction to a new
+    #script, or do I need to do something different?
+
+#SOLUTION: 
 
 class ExprWithChildren(Expr):
     '''ExprWithChildren is a base class for operations that act on expressions.'''
@@ -96,221 +106,221 @@ class ExprWithChildren(Expr):
         return rtn
 
     #intermediate step in part
-    def flatten(lst):
-        if type(lst) != list:
-            return lst 
+    # def flatten(lst):
+    #     if type(lst) != list:
+    #         return lst 
 
-        flatList = []
+    #     flatList = []
 
-        for item in lst:
-            if type(item) == list:
-                for x in flatten(item):
-                    flatList.append(x)
-            else:
-                flatList.append(item)
+    #     for item in lst:
+    #         if type(item) == list:
+    #             for x in flatten(item):
+    #                 flatList.append(x)
+    #         else:
+    #             flatList.append(item)
 
-        return flatList
+    #     return flatList
 
-    #intermediate step in intPart
-    def part(n):
-        if n == 1:
-            return [0]
+    # #intermediate step in intPart
+    # def part(n):
+    #     if n == 1:
+    #         return [0]
 
-        parts = [] 
+    #     parts = [] 
 
-        for i in range(n):
-            for j in range(len(part(i))):
-                parts.append(flatten([n - i] + [part(i)[j]]))
+    #     for i in range(n):
+    #         for j in range(len(part(i))):
+    #             parts.append(flatten([n - i] + [part(i)[j]]))
 
-        return parts
+    #     return parts
 
-    #builds an integer partition of n
-    def intPart(n):
-        return [[n]] + part(n)
+    # #builds an integer partition of n
+    # def intPart(n):
+    #     return [[n]] + part(n)
 
 
-    #builds a particular Q set of order d
-    #appends a list of the multiplicities of each derivative to the end
-    def buildFForOrder(self,d):
-        n = len(self._children)
-        if d == 1:
-            F = [i for i in range(n)]
-        else:
-            dummyIter = [(i) for i in range(n)]
+    # #builds a particular Q set of order d
+    # #appends a list of the multiplicities of each derivative to the end
+    # def buildFForOrder(self,d):
+    #     n = len(self._children)
+    #     if d == 1:
+    #         F = [i for i in range(n)]
+    #     else:
+    #         dummyIter = [(i) for i in range(n)]
 
-            F = list(it.combinations_with_replacement(dummyIter,d))
+    #         F = list(it.combinations_with_replacement(dummyIter,d))
 
-        mults = [int(binom(d,i)) for i in range(len(F))]
+    #     mults = [int(binom(d,i)) for i in range(len(F))]
         
 
-        FwithMults = {}
-        for i in range(len(mults)):
-            FwithMults[F[i]] = mults[i]
+    #     FwithMults = {}
+    #     for i in range(len(mults)):
+    #         FwithMults[F[i]] = mults[i]
 
-        return FwithMults
+    #     return FwithMults
 
-    #builds all F sets up to oder d
-    def buildAllFUpToOrder(self,d):
-        n = len(self._children)
-        assert(n >= 1)
+    # #builds all F sets up to oder d
+    # def buildAllFUpToOrder(self,d):
+    #     n = len(self._children)
+    #     assert(n >= 1)
 
-        Fsets = {}
-        for i in range(d):
-            Fsets = Fsets | self.buildFForOrder(i+1)
+    #     Fsets = {}
+    #     for i in range(d):
+    #         Fsets = Fsets | self.buildFForOrder(i+1)
 
-        return Fsets
+    #     return Fsets
 
-    #builds all Q sets up to order d
-    def buildQUpToOrder(self,d):
-        Qconst = {}; Qvar = {}
+    # #builds all Q sets up to order d
+    # def buildQUpToOrder(self,d):
+    #     Qconst = {}; Qvar = {}
 
-        for i in range(d):
-            [this_Qconst, this_Qvar] = self.buildQForOrder(i+1)
-            Qconst = Qconst | this_Qconst
-            Qvar = Qvar | this_Qvar
+    #     for i in range(d):
+    #         [this_Qconst, this_Qvar] = self.buildQForOrder(i+1)
+    #         Qconst = Qconst | this_Qconst
+    #         Qvar = Qvar | this_Qvar
 
-        return(Qconst, Qvar)
+    #     return(Qconst, Qvar)
 
-    #builds A set for order d
-    def buildAForOrder(self,order):
-        n = len(self._children)
-        assert(n >= 1)
+    # #builds A set for order d
+    # def buildAForOrder(self,order):
+    #     n = len(self._children)
+    #     assert(n >= 1)
 
-        if order == 1:
-            [Qconst_order_1, Qvar_order_1] = self.buildQForOrder(1)
+    #     if order == 1:
+    #         [Qconst_order_1, Qvar_order_1] = self.buildQForOrder(1)
 
-            Aconst = {}; Avar = {}
-            for q in Qconst_order_1:
-                [this_Aconst, this_Avar] = self.child(q).buildAForOrder(1)
-                Aconst = Aconst | this_Aconst
-                Avar = Avar | this_Avar
+    #         Aconst = {}; Avar = {}
+    #         for q in Qconst_order_1:
+    #             [this_Aconst, this_Avar] = self.child(q).buildAForOrder(1)
+    #             Aconst = Aconst | this_Aconst
+    #             Avar = Avar | this_Avar
 
-            for q in Qvar_order_1:
-                [this_Aconst, this_Avar] = self.child(q).buildAForOrder(1)
-                Avar = Avar | this_Aconst | this_Avar
+    #         for q in Qvar_order_1:
+    #             [this_Aconst, this_Avar] = self.child(q).buildAForOrder(1)
+    #             Avar = Avar | this_Aconst | this_Avar
 
-        if order == 2:
-            [Qconst_order_1, Qvar_order_1] = self.buildQForOrder(1)
+    #     if order == 2:
+    #         [Qconst_order_1, Qvar_order_1] = self.buildQForOrder(1)
 
-            A2_term_const = {}; A2_term_var = {}
-            for q in Qconst_order_1:
-                [this_Aconst, this_Avar] = self.child(q).buildAForOrder(2)
-                A2_term_const = A2_term_const | this_Aconst
-                A2_term_var = A2_term_var | this_Avar
+    #         A2_term_const = {}; A2_term_var = {}
+    #         for q in Qconst_order_1:
+    #             [this_Aconst, this_Avar] = self.child(q).buildAForOrder(2)
+    #             A2_term_const = A2_term_const | this_Aconst
+    #             A2_term_var = A2_term_var | this_Avar
 
-            for q in Qvar_order_1:
-                [this_Aconst, this_Avar] = self.child(q).buildAForOrder(2)
-                A2_term_var = A2_term_var | this_Aconst | this_Avar
+    #         for q in Qvar_order_1:
+    #             [this_Aconst, this_Avar] = self.child(q).buildAForOrder(2)
+    #             A2_term_var = A2_term_var | this_Aconst | this_Avar
 
-            [Qconst_order_2, Qvar_order_2] = self.buildQForOrder(2)
+    #         [Qconst_order_2, Qvar_order_2] = self.buildQForOrder(2)
 
-            A1_term_const = {}; A1_term_var = {}
-            for q in Qconst_order_2:
-                [this_Aconst_0, this_Avar_0] = self.child(q[0]).buildAForOrder(1)
-                [this_Aconst_1, this_Avar_1] = self.child(q[1]).buildAForOrder(1)
-                this_Aconst = list(zip(this_Aconst_0, this_Aconst_1))
-                this_Avar = list(zip(this_Avar_0, this_Avar_1))
+    #         A1_term_const = {}; A1_term_var = {}
+    #         for q in Qconst_order_2:
+    #             [this_Aconst_0, this_Avar_0] = self.child(q[0]).buildAForOrder(1)
+    #             [this_Aconst_1, this_Avar_1] = self.child(q[1]).buildAForOrder(1)
+    #             this_Aconst = list(zip(this_Aconst_0, this_Aconst_1))
+    #             this_Avar = list(zip(this_Avar_0, this_Avar_1))
 
-                for item in this_Aconst:
-                    A1_term_const[item] = Qconst_order_2[item]
-                for item in this_Avar:
-                    A1_term_var[item] = Qvar_order_2[item]
+    #             for item in this_Aconst:
+    #                 A1_term_const[item] = Qconst_order_2[item]
+    #             for item in this_Avar:
+    #                 A1_term_var[item] = Qvar_order_2[item]
 
-            for q in Qvar_order_2:
-                [this_Aconst_0, this_Avar_0] = self.child(q[0]).buildAForOrder(1)
-                [this_Aconst_1, this_Avar_1] = self.child(q[1]).buildAForOrder(1)
-                this_Aconst = list(zip(this_Aconst_0, this_Aconst_1))
-                this_Avar = list(zip(this_Avar_0, this_Avar_1))
+    #         for q in Qvar_order_2:
+    #             [this_Aconst_0, this_Avar_0] = self.child(q[0]).buildAForOrder(1)
+    #             [this_Aconst_1, this_Avar_1] = self.child(q[1]).buildAForOrder(1)
+    #             this_Aconst = list(zip(this_Aconst_0, this_Aconst_1))
+    #             this_Avar = list(zip(this_Avar_0, this_Avar_1))
 
-                for item in this_Aconst:
-                    A1_term_var[item] = Qvar_order_2[item]
-                for item in this_Avar:
-                    A1_term_var[item] = Qvar_order_2[item]
+    #             for item in this_Aconst:
+    #                 A1_term_var[item] = Qvar_order_2[item]
+    #             for item in this_Avar:
+    #                 A1_term_var[item] = Qvar_order_2[item]
 
-            Aconst = A1_term_const | A2_term_const
-            Avar = A1_term_var | A2_term_var 
-        if order == 3:
-            [Qconst_order_1, Qvar_order_1] = self.buildQForOrder(1)
-            Q1 = Qconst_order_1 | Qvar_order_1
+    #         Aconst = A1_term_const | A2_term_const
+    #         Avar = A1_term_var | A2_term_var 
+    #     if order == 3:
+    #         [Qconst_order_1, Qvar_order_1] = self.buildQForOrder(1)
+    #         Q1 = Qconst_order_1 | Qvar_order_1
 
-            A3_term_const = {}; A3_term_var = {}
-            for q in Qconst_order_1:
-                [this_Aconst,this_Avar] = self.child(q).buildAForOrder(3)
-                A3_term_const = A3_term_const | this_Aconst
-                A3_term_var = A3_term_var | this_Avar
+    #         A3_term_const = {}; A3_term_var = {}
+    #         for q in Qconst_order_1:
+    #             [this_Aconst,this_Avar] = self.child(q).buildAForOrder(3)
+    #             A3_term_const = A3_term_const | this_Aconst
+    #             A3_term_var = A3_term_var | this_Avar
 
-            [Qconst_order_2, Qvar_order_2] = self.buildQForOrder(2)
-            Q2 = Qconst_order_2 | Qvar_order_2
+    #         [Qconst_order_2, Qvar_order_2] = self.buildQForOrder(2)
+    #         Q2 = Qconst_order_2 | Qvar_order_2
 
-            A2_term_const = {}; A2_term_var = {}
-            for q in Qconst_order_2:
-                [this_Aconst_0,this_Avar_0] = self.child(q[0]).buildAForOrder(1)
-                [this_Aconst_1,this_Avar_1] = self.child(q[1]).buildAForOrder(2)
-                this_Aconst = list(zip(this_Aconst_0, this_Aconst_1))
-                this_Avar = list(zip(this_Avar_0,this_Avar_1))
-                for item in this_Aconst:
-                    A2_term_const[item] = Q2[item]
-                for item in this_Avar:
-                    A2_term_var[item] = Q2[item]
+    #         A2_term_const = {}; A2_term_var = {}
+    #         for q in Qconst_order_2:
+    #             [this_Aconst_0,this_Avar_0] = self.child(q[0]).buildAForOrder(1)
+    #             [this_Aconst_1,this_Avar_1] = self.child(q[1]).buildAForOrder(2)
+    #             this_Aconst = list(zip(this_Aconst_0, this_Aconst_1))
+    #             this_Avar = list(zip(this_Avar_0,this_Avar_1))
+    #             for item in this_Aconst:
+    #                 A2_term_const[item] = Q2[item]
+    #             for item in this_Avar:
+    #                 A2_term_var[item] = Q2[item]
 
-            [Qconst_order_3, Qvar_order_3] = self.buildQForOrder(3)
-            Q3 = Qconst_order_3 | Qvar_order_3
+    #         [Qconst_order_3, Qvar_order_3] = self.buildQForOrder(3)
+    #         Q3 = Qconst_order_3 | Qvar_order_3
 
-            A1_term_const = {}; A1_term_var = {}
-            for q in Qconst_order_3:
-                [this_Aconst_0,this_Avar_0] = self.child(q[0]).buildAForOrder(1)
-                [this_Aconst_1,this_Avar_1] = self.child(q[1]).buildAForOrder(1)
-                [this_Aconst_2,this_Avar_2] = self.child(q[2]).buildAForOrder(1)
-                this_Aconst = list(zip(this_Aconst_0,this_Aconst_1,this_Aconst_2))
-                this_Avar = list(zip(this_Avar_0,this_Avar_1,this_Avar_2))
-                for item in this_Aconst:
-                    A1_term_const[item] = Q3[item]
-                for item in this_Avar:
-                    A1_term_var[item] = Q3[item]
+    #         A1_term_const = {}; A1_term_var = {}
+    #         for q in Qconst_order_3:
+    #             [this_Aconst_0,this_Avar_0] = self.child(q[0]).buildAForOrder(1)
+    #             [this_Aconst_1,this_Avar_1] = self.child(q[1]).buildAForOrder(1)
+    #             [this_Aconst_2,this_Avar_2] = self.child(q[2]).buildAForOrder(1)
+    #             this_Aconst = list(zip(this_Aconst_0,this_Aconst_1,this_Aconst_2))
+    #             this_Avar = list(zip(this_Avar_0,this_Avar_1,this_Avar_2))
+    #             for item in this_Aconst:
+    #                 A1_term_const[item] = Q3[item]
+    #             for item in this_Avar:
+    #                 A1_term_var[item] = Q3[item]
 
-            A1_term_var = Q3
-            for q in Q3:
-                if q in A1_term_const:
-                    del A1_term_var[q]
+    #         A1_term_var = Q3
+    #         for q in Q3:
+    #             if q in A1_term_const:
+    #                 del A1_term_var[q]
 
-            Aconst = A3_term_const | A2_term_const | A1_term_const
+    #         Aconst = A3_term_const | A2_term_const | A1_term_const
 
-            Avar = A3_term_var | A2_term_var | A1_term_var 
-        return Aconst, Avar 
+    #         Avar = A3_term_var | A2_term_var | A1_term_var 
+    #     return Aconst, Avar 
 
-    #builds all A sets up to order d
-    def buildAUpToOrder(self,order):
-        Aconst = {}; Avar = {}
-        for i in range(order):
-            [this_Aconst, this_Avar] = self.buildAForOrder(i+1)
-            Aconst = Aconst | this_Aconst
-            Avar = Avar | this_Avar
-        return Aconst, Avar
+    # #builds all A sets up to order d
+    # def buildAUpToOrder(self,order):
+    #     Aconst = {}; Avar = {}
+    #     for i in range(order):
+    #         [this_Aconst, this_Avar] = self.buildAForOrder(i+1)
+    #         Aconst = Aconst | this_Aconst
+    #         Avar = Avar | this_Avar
+    #     return Aconst, Avar
 
-    #builds a dictionary of required derivatives with order d and 
-    #their multiplicites given petitioning sets
-    def buildR(self,Petitions):
-        max_order = len(Petitions)
+    # #builds a dictionary of required derivatives with order d and 
+    # #their multiplicites given petitioning sets
+    # def buildR(self,Petitions):
+    #     max_order = len(Petitions)
 
-        Rconst = []; Rvar = []
-        for d in range(1,max_order+1):
-            [this_Aconst, this_Avar] = self.buildAForOrder(d)
-            RC = {}; RV = {}
-            for P in Petitions[d-1]:
-                for item in this_Aconst:
-                    if (item == P) or (isinstance(P,Iterable) and item in P):
-                        RC[item] = this_Aconst[item]
-                for item in this_Avar:
-                    if (item == P) or (isinstance(P,Iterable) and item in P):
-                        RV[item] = this_Avar[item]
+    #     Rconst = []; Rvar = []
+    #     for d in range(1,max_order+1):
+    #         [this_Aconst, this_Avar] = self.buildAForOrder(d)
+    #         RC = {}; RV = {}
+    #         for P in Petitions[d-1]:
+    #             for item in this_Aconst:
+    #                 if (item == P) or (isinstance(P,Iterable) and item in P):
+    #                     RC[item] = this_Aconst[item]
+    #             for item in this_Avar:
+    #                 if (item == P) or (isinstance(P,Iterable) and item in P):
+    #                     RV[item] = this_Avar[item]
 
-            if RC != {}:
-                Rconst.append(RC)
+    #         if RC != {}:
+    #             Rconst.append(RC)
             
-            if RV != {}:
-                Rvar.append(RV)
+    #         if RV != {}:
+    #             Rvar.append(RV)
 
-        return Rconst, Rvar
+    #     return Rconst, Rvar
 
 class UnaryExpr(ExprWithChildren):
     def __init__(self, arg, shape):
@@ -338,29 +348,29 @@ class UnaryMinus(UnaryExpr):
     def isLinearInTests(self):
         return self.arg().isLinearInTests()
 
-    def buildQForOrder(self,d):
-        F = self.buildFForOrder(d)
+    # def buildQForOrder(self,d):
+    #     F = self.buildFForOrder(d)
         
-        Qvar = {}
-        if d == 1:
-            Qconst = {0:1}
-        else:
-            Qconst = {}
+    #     Qvar = {}
+    #     if d == 1:
+    #         Qconst = {self.arg:1}
+    #     else:
+    #         Qconst = {}
 
-        return Qconst, Qvar
+    #     return Qconst, Qvar
 
 
-    def buildA(self,d):
-        [Aconst, Avar] = self.arg.buildA()
-        return Aconst, Avar
+    # def buildA(self,d):
+    #     [Aconst, Avar] = self.arg.buildA()
+    #     return Aconst, Avar
 
-    def printQ(self,d):
-        [Qconst, Qvar] = self.buildQ(d)
+    # def printQ(self,d):
+    #     [Qconst, Qvar] = self.buildQ(d)
 
-        for Q in Qconst:
-            print("Qconst contains the derivative {}, which has multiplicity {}".format(Q,Qconst[Q]))
-        for Q in Qvar:
-            print("Qvar contains the derivative {}, which has multiplicity {}".format(Q,Qvar[Q]))
+    #     for Q in Qconst:
+    #         print("Qconst contains the derivative {}, which has multiplicity {}".format(Q,Qconst[Q]))
+    #     for Q in Qvar:
+    #         print("Qvar contains the derivative {}, which has multiplicity {}".format(Q,Qvar[Q]))
 
 
 class BinaryExpr(ExprWithChildren):
@@ -473,31 +483,31 @@ class ProductExpr(BinaryArithmeticOp):
             return True
         return False
 
-    def buildQForOrder(self,d):
-        F = self.buildFForOrder(d)
-        F_keys = F.keys()
+    # def buildQForOrder(self,d):
+    #     F = self.buildFForOrder(d)
+    #     F_keys = F.keys()
 
-        Qconst = {}; Qvar = {}
-        if d == 1:
-            Qvar = F 
-        elif d == 2:
-            const_keys_to_add = []
-            for key in F_keys:
-                if key[0] != key[1]:
-                    const_keys_to_add.append(key)
+    #     Qconst = {}; Qvar = {}
+    #     if d == 1:
+    #         Qvar = F 
+    #     elif d == 2:
+    #         const_keys_to_add = []
+    #         for key in F_keys:
+    #             if key[0] != key[1]:
+    #                 const_keys_to_add.append(key)
 
-            for key in const_keys_to_add:
-                Qconst[key] = F[key]
+    #         for key in const_keys_to_add:
+    #             Qconst[key] = F[key]
 
-        return Qconst, Qvar 
+    #     return Qconst, Qvar 
 
-    def printQ(self,d):
-        [Qconst, Qvar] = self.buildQ(d)
+    # def printQ(self,d):
+    #     [Qconst, Qvar] = self.buildQ(d)
 
-        for Q in Qconst:
-            print("Qconst contains the derivative {}, which has multiplicity {}".format(Q,Qconst[Q]))
-        for Q in Qvar:
-            print("Qvar contains the derivative {}, which has multiplicity {}".format(Q,Qvar[Q]))
+    #     for Q in Qconst:
+    #         print("Qconst contains the derivative {}, which has multiplicity {}".format(Q,Qconst[Q]))
+    #     for Q in Qvar:
+    #         print("Qvar contains the derivative {}, which has multiplicity {}".format(Q,Qvar[Q]))
 
 
 def Dot(a, b):
@@ -564,30 +574,30 @@ class QuotientExpr(BinaryArithmeticOp):
             return True
         return False
 
-    def buildQForOrder(self,d):
-        F = self.buildFForOrder(d)
-        F_keys = F.keys()
+    # def buildQForOrder(self,d):
+    #     F = self.buildFForOrder(d)
+    #     F_keys = F.keys()
 
-        Qconst = {}; Qvar = F 
-        if d >= 2:
-            keys_to_remove = []
-            for Q in Qvar:
-                num_zeros = Q.count(0)
-                if num_zeros >= 2:
-                    keys_to_remove.append(Q)
+    #     Qconst = {}; Qvar = F 
+    #     if d >= 2:
+    #         keys_to_remove = []
+    #         for Q in Qvar:
+    #             num_zeros = Q.count(0)
+    #             if num_zeros >= 2:
+    #                 keys_to_remove.append(Q)
 
-            for key in keys_to_remove:
-                del Qvar[key]
+    #         for key in keys_to_remove:
+    #             del Qvar[key]
 
-        return Qconst, Qvar 
+    #     return Qconst, Qvar 
 
-    def printQ(self,d):
-        [Qconst, Qvar] = self.buildQ(d)
+    # def printQ(self,d):
+    #     [Qconst, Qvar] = self.buildQ(d)
 
-        for Q in Qconst:
-            print("Qconst contains the derivative {}, which has multiplicity {}".format(Q,Qconst[Q]))
-        for Q in Qvar:
-            print("Qvar contains the derivative {}, which has multiplicity {}".format(Q,Qvar[Q]))
+    #     for Q in Qconst:
+    #         print("Qconst contains the derivative {}, which has multiplicity {}".format(Q,Qconst[Q]))
+    #     for Q in Qvar:
+    #         print("Qvar contains the derivative {}, which has multiplicity {}".format(Q,Qvar[Q]))
 
 class PowerExpr(BinaryExpr):
     def __init__(self, L, R):
@@ -598,16 +608,16 @@ class PowerExpr(BinaryExpr):
     def __str__(self):
         return 'pow({},{})'.format(self.left(), self.right())
 
-    def buildQForOrder(self,d):
-        F = self.buildFForOrder(d)
+    # def buildQForOrder(self,d):
+    #     F = self.buildFForOrder(d)
 
-        Qconst = {}; Qvar = F 
-        return Qconst, Qvar 
+    #     Qconst = {}; Qvar = F 
+    #     return Qconst, Qvar 
 
-    def printQ(self,d):
-        [Qconst, Qvar] = self.buildQ(d)
+    # def printQ(self,d):
+    #     [Qconst, Qvar] = self.buildQ(d)
 
-        for Q in Qconst:
-            print("Qconst contains the derivative {}, which has multiplicity {}".format(Q,Qconst[Q]))
-        for Q in Qvar:
-            print("Qvar contains the derivative {}, which has multiplicity {}".format(Q,Qvar[Q]))
+    #     for Q in Qconst:
+    #         print("Qconst contains the derivative {}, which has multiplicity {}".format(Q,Qconst[Q]))
+    #     for Q in Qvar:
+    #         print("Qvar contains the derivative {}, which has multiplicity {}".format(Q,Qvar[Q]))

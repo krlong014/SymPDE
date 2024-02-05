@@ -120,17 +120,6 @@ class _IdentityOp(HungryDiffOp):
     def __str__(self):
         return 'IdentityOp'
 
-
-def Partial(f, coord):
-    if isinstance(coord, int):
-        op = _Partial(coord)
-    elif isinstance(coord, Coordinate):
-        op = _Partial(coord.dir)
-    else:
-        raise ValueError('unable to interpret direction {} in Partial()'.format(coord))
-
-    return op(f)
-
 class _Partial(HungryDiffOp):
     def __init__(self, dir, name=None):
         super().__init__()

@@ -1,9 +1,9 @@
 from functools import total_ordering
-from . DiffOp import HungryDiffOp, _Partial, _Gradient, _IdentityOp
-from . FunctionWithBasis import FunctionWithBasis, UnknownFunction, TestFunction
-from . Lagrange import Lagrange
-from . OrderedTuple import OrderedTuple
-from . Coordinate import Coordinate
+from SymPDE.DiffOp import HungryDiffOp, _Partial, _Gradient, _IdentityOp
+from SymPDE.FunctionWithBasis import FunctionWithBasis, UnknownFunction, TestFunction
+from SymPDE.Lagrange import Lagrange
+from SymPDE.OrderedTuple import OrderedTuple
+from SymPDE.Coordinate import Coordinate
 
 # KRL to do: distinguist test vs unknown vs parameter
 

@@ -469,3 +469,7 @@ class Expr(ABC):
     def getUnks(self):
         '''Find all test functions in this expression'''
         return set()
+
+    def myType(self):
+        '''Returns expression type'''
+        return self.__class__.__name__
