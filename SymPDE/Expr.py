@@ -16,6 +16,7 @@ class Expr(ABC):
         '''Construct an expression of a specified shape.'''
         assert(isinstance(shape, ExprShape))
         self._shape = shape
+        self._contextToEvaluatorMap = {}
 
     # Describe the structure ('shape') of the expression: scalar,
     # vector, tensor, or list.
@@ -473,3 +474,22 @@ class Expr(ABC):
     def myType(self):
         '''Returns expression type'''
         return self.__class__.__name__
+
+    # ======================================================================
+    # Create evaluator
+    # ======================================================================
+
+    @abstractmethod
+    def _makeEval(self, context):
+        '''Constructs evaluator object for a given context'''
+        pass
+    
+    def makeEval(self, context):
+        if context in _contextToEvaluatorMap:
+            return _contextToEvaluatorMap
+        else:
+            eval = self._makeEval(context)
+            _contextToEvaluatorMap[context] = eval
+            return eval
+        
+    

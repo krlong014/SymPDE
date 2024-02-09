@@ -1,16 +1,17 @@
 from functools import total_ordering
-from SymPDE.DiffOp import HungryDiffOp, _Partial, _Gradient, _IdentityOp
-from SymPDE.FunctionWithBasis import FunctionWithBasis, UnknownFunction, TestFunction
-from SymPDE.Lagrange import Lagrange
 from SymPDE.OrderedTuple import OrderedTuple
-from SymPDE.Coordinate import Coordinate
 
 # KRL to do: distinguist test vs unknown vs parameter
 
 @total_ordering
 class DerivSpecifier:
+    from SymPDE.HungryDiffOp import HungryDiffOp, _IdentityOp
 
     def __init__(self, funcOrCoord, op=_IdentityOp()):
+
+
+      from SymPDE.Coordinate import Coordinate
+      from SymPDE.FunctionWithBasis import FunctionWithBasis
 
       assert(isinstance(op, HungryDiffOp))
 
@@ -45,6 +46,10 @@ class DerivSpecifier:
     
     def isCoord(self):
         return not self.isFunc()
+    
+    def isTestFunction(self):
+    
+    def isUnknownFunction(self):
 
     def id(self):
         return self.data[1]
@@ -91,6 +96,12 @@ class MultipleDeriv(OrderedTuple):
 
 
 if __name__=='__main__':
+    
+    from SymPDE.FunctionWithBasis import UnknownFunction, TestFunction 
+    from SymPDE.Coordinate import Coordinate
+    from SymPDE.Lagrange import Lagrange
+    from SymPDE.HungryDiffOp import _Partial, _Gradient
+
     bas = Lagrange(1)
     v = TestFunction(bas, 'v')
     u = TestFunction(bas, 'u')
