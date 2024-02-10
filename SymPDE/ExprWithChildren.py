@@ -1,15 +1,12 @@
 from SymPDE.Expr import Expr
-from SymPDE.ExprShape import ScalarShape, VectorShape
-from SymPDE.Coordinate import Coordinate
-from abc import ABC, abstractmethod
-from numpy.linalg import norm
-import itertools as it
-from scipy.special import binom
-from collections.abc import Iterable
-# from SymPDE.DerivSpecifier import DerivSpecifier
+
+
 #############################################################################
 #
-# Fundamental Expr subtypes for arithmetic operations
+# ExprWithChildren is a base class for expressions with subexpressions 
+# (children), with specializations for unary and binary expressions. The job
+# of these classes is to provide common functions for accessing and 
+# querying subexpressions.
 #
 #############################################################################
 
@@ -96,7 +93,7 @@ class ExprWithChildren(Expr):
             rtn = rtn.union(s)
         return rtn
 
-    def makeEvalsForChildren(self, context):
+    def getEvalsForChildren(self, context):
         
         childEvals = []
         for i,c in enumerate(self.children()):
@@ -115,9 +112,6 @@ class UnaryExpr(ExprWithChildren):
 
     def _sameas(self, other):
         return self.arg().sameas(other.arg())
-    
-    def makeArgEval(self, context):
-        return self.arg().makeEval(context)
 
 
 class BinaryExpr(ExprWithChildren):
@@ -133,9 +127,5 @@ class BinaryExpr(ExprWithChildren):
     def isSpatialConstant(self):
         return self.left().isSpatialConstant() and self.right().isSpatialConstant()
     
-    def makeLeftEval(self, context):
-        return self.left().makeEval(context)
     
-    def makeRightEval(self, context):
-        return self.right().makeEval(context)
     

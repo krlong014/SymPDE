@@ -1,62 +1,62 @@
 from SymPDE.Expr import Expr
-from SymPDE.ArithmeticExpr import ExprWithChildren, UnaryMinus, UnaryExpr
-from SymPDE.Coordinate import Coordinate
 import itertools as it
 from SymPDE.DictFuncs import interdict
 from SymPDE.ExprShape import ScalarShape, VectorShape
 from SymPDE.ExprEval import ExprEval
-from SymPDE.MakeEval import makeEval
 
 class ExprWithChildrenEval(ExprEval):
-	def __init__(self,expr):
+	def __init__(self, expr, context):
 		assert(isinstance(expr,ExprWithChildren))
-		self._children = expr.children()
+		self.childEvaluators = expr.getEvalsForChildren(context)
+		
 
 
-	#intermediate step in part
-	def flatten(lst):
-		if type(lst) != list:
-			return lst 
+	# #intermediate step in part
+	# def flatten(lst):
+	# 	if type(lst) != list:
+	# 		return lst 
 
-		flatList = []
+	# 	flatList = []
 
-		for item in lst:
-			if type(item) == list:
-				for x in flatten(item):
-					flatList.append(x)
-			else:
-				flatList.append(item)
+	# 	for item in lst:
+	# 		if type(item) == list:
+	# 			for x in self.flatten(item):
+	# 				flatList.append(x)
+	# 		else:
+	# 			flatList.append(item)
 
-		return flatList 
+	# 	return flatList 
 
-	#intermediate step in intPart
-	def part(n):
-		if n == 1:
-			return [0]
+	# #intermediate step in intPart
+	# def part(n):
+	# 	if n == 1:
+	# 		return [0]
 
-		parts = []
+	# 	parts = []
 
-		for i in range(n):
-			for j in range(len(part(i))):
-				parts.append(flatten([n-i] + [part(i)[j]]))
+	# 	for i in range(n):
+	# 		for j in range(len(part(i))):
+	# 			parts.append(flatten([n-i] + [part(i)[j]]))
 
-		return parts 
+	# 	return parts 
 
-	#builds an integer partition of n
-	def intPart(n):
-		return [[n]] + part(n)
+	# #builds an integer partition of n
+	# def intPart(n):
+	# 	return [[n]] + part(n)
 
 
 	#builds a particular Q set of order d
 	#appends a list of the multiplicities of each derivative to the end
 	def buildFForOrder(self,d):
+		from scipy.special import binom
+		
 		n = len(self._children)
 		if d == 1:
 			F = [i for i in range(n)]
 		else:
 			dummyIter = [(i) for i in range(n)]
-			F = list(it.combinations_with_replacement(dumyIter,d))
-
+			F = list(it.combinations_with_replacement(dummyIter,d))
+      
 		mults = [int(binom(d,i)) for i in range(len(F))]
 
 		FwithMults = {}
@@ -67,7 +67,7 @@ class ExprWithChildrenEval(ExprEval):
 
 	#builds all F sets up to oder d
 	def buildAllFUpToOrder(self,d):
-		n = len(sef._children)
+		n = len(self._children)
 		assert(n >= 1)
 
 		Fsets = {}
@@ -145,7 +145,7 @@ class ExprWithChildrenEval(ExprEval):
 			Aconst = A1_term_const | A2_term_const
 			Avar = A1_term_var | A2_term_var
 
-		if order == 3:
+		if order == 3: # KRL: should this be d instead of order?
 			[Qconst_order_1, Qvar_order_1] = self.buildQForOrder(1)
 			Q1 = Qconst_order_1 | Qvar_order_1
 
@@ -203,14 +203,14 @@ class ExprWithChildrenEval(ExprEval):
 		return Aconst, Avar 
 
 class UnaryExprEval(ExprWithChildrenEval):
-	def __init__(self,expr):
+	def __init__(self, expr, context):
 		assert(isinstance(expr,UnaryExpr))
-		super().__init__(expr)
+		super().__init__(expr, context)
 
 class UnaryMinusEval(UnaryExprEval):
-	def __init__(self,expr):
+	def __init__(self, expr, context):
 		assert(isinstance(expr, UnaryMinus))
-		super().__init__(expr)
+		super().__init__(expr, context)
 		self.argEval = makeEval(expr.arg())
 
 	def buildQForOrder(self,d):

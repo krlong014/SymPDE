@@ -5,22 +5,26 @@ from SymPDE.OrderedTuple import OrderedTuple
 
 @total_ordering
 class DerivSpecifier:
-    from SymPDE.HungryDiffOp import HungryDiffOp, _IdentityOp
+    from SymPDE.HungryDiffOp import _IdentityOp
 
     def __init__(self, funcOrCoord, op=_IdentityOp()):
 
 
       from SymPDE.Coordinate import Coordinate
       from SymPDE.FunctionWithBasis import FunctionWithBasis
+      from SymPDE.HungryDiffOp import HungryDiffOp, _IdentityOp
 
       assert(isinstance(op, HungryDiffOp))
 
       assert(isinstance(funcOrCoord, FunctionWithBasis) 
               or isinstance(funcOrCoord, Coordinate))
 
+      isTest = False
       if isinstance(funcOrCoord, FunctionWithBasis):
         assert(funcOrCoord.isTest() or funcOrCoord.isUnknown())
         isFunc = True
+        if funcOrCoord.isTest():
+            isTest = True
         id = funcOrCoord.funcID()
       else:
         isFunc = False
@@ -28,50 +32,53 @@ class DerivSpecifier:
         # We should never differentiate a coord expr at this point
         assert(isinstance(op, _IdentityOp))
 
-      self.data = (isFunc, id, op)
+      self._data = (isFunc, id, isTest, op)
       self._name = funcOrCoord.name()
 
     def __eq__(self, other):
         assert(isinstance(other, DerivSpecifier))
-        return self.data == other.data;
+        return self._data == other._data;
        
 
     def __le__(self, other):
         assert(isinstance(other, DerivSpecifier))
         
-        return self.data < other.data
+        return self._data < other._data
     
     def isFunc(self):
-        return self.data[0]
+        return self._data[0]
     
     def isCoord(self):
         return not self.isFunc()
     
     def isTestFunction(self):
+        return self.isFunc() and self._data[3]
     
     def isUnknownFunction(self):
+        return self.isFunc() and not self._data[3]
 
     def id(self):
-        return self.data[1]
+        return self._data[1]
 
     def op(self):
-        return self.data[2]
+        return self._data[2]
     
     def name(self):
-        return _name
+        return self._name
 
     def __hash__(self):
-        return hash(self.data)
+        return hash(self._data)
 
     def __repr__(self):
-        return 'DerivSpecifier(isFunc={}, id={}, op={}, name={})'.format(
-            self.data[0], self.data[1], self.data[2], self._name)
+        return 'DerivSpecifier(isFunc={}, id={}, op={}, isTest={}, name={})'.format(
+            self.isFunc(), self.id(), self.op(), self.isTest(), self.name())
 
     def __str__(self):
-        if self.op()==_IdentityOp():
-            return self._name
-        else:
-            return '{}({})'.format(self.op(), self._name)
+      from SymPDE.HungryDiffOp import _IdentityOp
+      if self.op()==_IdentityOp():
+          return self._name
+      else:
+          return '{}({})'.format(self.op(), self._name)
 
 
 class MultipleDeriv(OrderedTuple):

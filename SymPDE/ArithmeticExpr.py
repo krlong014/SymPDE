@@ -1,10 +1,8 @@
 from SymPDE.Expr import Expr
-from SymPDE.ExprWithChildren import ExprWithChildren, UnaryExpr, BinaryExpr
-from SymPDE.ExprShape import ScalarShape, VectorShape
+from SymPDE.ExprWithChildren import UnaryExpr, BinaryExpr
+from SymPDE.ExprShape import ExprShape, ScalarShape, VectorShape
 from abc import abstractmethod
-from numpy.linalg import norm
 import itertools as it
-from scipy.special import binom
 from collections.abc import Iterable
 
 #############################################################################
@@ -12,8 +10,6 @@ from collections.abc import Iterable
 # Fundamental Expr subtypes for arithmetic operations
 #
 #############################################################################
-
-
 
 
 class UnaryMinus(UnaryExpr):
@@ -31,45 +27,10 @@ class UnaryMinus(UnaryExpr):
         return self.arg().isLinearInTests()
     
     def _makeEval(self, context):
-        return 
+        from SymPDE.ChainRuleEval import UnaryMinusEvaluator
+        return UnaryMinusEvaluator(self, context)
 
-    # def buildQForOrder(self,d):
-    #     F = self.buildFForOrder(d)
-        
-    #     Qvar = {}
-    #     if d == 1:
-    #         Qconst = {self.arg:1}
-    #     else:
-    #         Qconst = {}
-
-    #     return Qconst, Qvar
-
-
-    # def buildA(self,d):
-    #     [Aconst, Avar] = self.arg.buildA()
-    #     return Aconst, Avar
-
-    # def printQ(self,d):
-    #     [Qconst, Qvar] = self.buildQ(d)
-
-    #     for Q in Qconst:
-    #         print("Qconst contains the derivative {}, which has multiplicity {}".format(Q,Qconst[Q]))
-    #     for Q in Qvar:
-    #         print("Qvar contains the derivative {}, which has multiplicity {}".format(Q,Qvar[Q]))
-
-
-class BinaryExpr(ExprWithChildren):
-    def __init__(self, L, R, shape):
-        super().__init__((L, R), shape)
-
-    def left(self):
-        return self.child(0)
-
-    def right(self):
-        return self.child(1)
-
-    def isSpatialConstant(self):
-        return self.left().isSpatialConstant() and self.right().isSpatialConstant()
+    
 
 class BinaryArithmeticOp(BinaryExpr):
     def __init__(self, L, R, shape):
@@ -168,33 +129,7 @@ class ProductExpr(BinaryArithmeticOp):
             return True
         return False
 
-    # def buildQForOrder(self,d):
-    #     F = self.buildFForOrder(d)
-    #     F_keys = F.keys()
-
-    #     Qconst = {}; Qvar = {}
-    #     if d == 1:
-    #         Qvar = F 
-    #     elif d == 2:
-    #         const_keys_to_add = []
-    #         for key in F_keys:
-    #             if key[0] != key[1]:
-    #                 const_keys_to_add.append(key)
-
-    #         for key in const_keys_to_add:
-    #             Qconst[key] = F[key]
-
-    #     return Qconst, Qvar 
-
-    # def printQ(self,d):
-    #     [Qconst, Qvar] = self.buildQ(d)
-
-    #     for Q in Qconst:
-    #         print("Qconst contains the derivative {}, which has multiplicity {}".format(Q,Qconst[Q]))
-    #     for Q in Qvar:
-    #         print("Qvar contains the derivative {}, which has multiplicity {}".format(Q,Qvar[Q]))
-
-
+    
 def Dot(a, b):
     assert(isinstance(a.shape(), VectorShape)
         and isinstance(b.shape(), VectorShape))
@@ -218,9 +153,9 @@ class DotProductExpr(BinaryExpr):
             self.right().__repr__(), self.shape())
 
     def isLinearInTests(self):
-        if ( (left.isLinearInTests() and not right.hasTests())
+        if ( (self.left().isLinearInTests() and not self.right().hasTests())
             or
-            (right.isLinearInTests() and not left.hasTests()) ):
+            (self.right().isLinearInTests() and not self.left().hasTests()) ):
             return True
         return False
 
@@ -239,9 +174,9 @@ class CrossProductExpr(BinaryExpr):
         return 'cross({},{})'.format(self.L, self.R)
 
     def isLinearInTests(self):
-        if ( (left.isLinearInTests() and not right.hasTests())
+        if ( (self.left().isLinearInTests() and not self.right().hasTests())
             or
-            (right.isLinearInTests() and not left.hasTests()) ):
+            (self.right().isLinearInTests() and not self.left().hasTests()) ):
             return True
         return False
 
@@ -255,34 +190,10 @@ class QuotientExpr(BinaryArithmeticOp):
         return '/'
 
     def isLinearInTests(self):
-        if left.isLinearInTests() and not right.hasTests():
+        if self.left().isLinearInTests() and not self.right().hasTests():
             return True
         return False
-
-    # def buildQForOrder(self,d):
-    #     F = self.buildFForOrder(d)
-    #     F_keys = F.keys()
-
-    #     Qconst = {}; Qvar = F 
-    #     if d >= 2:
-    #         keys_to_remove = []
-    #         for Q in Qvar:
-    #             num_zeros = Q.count(0)
-    #             if num_zeros >= 2:
-    #                 keys_to_remove.append(Q)
-
-    #         for key in keys_to_remove:
-    #             del Qvar[key]
-
-    #     return Qconst, Qvar 
-
-    # def printQ(self,d):
-    #     [Qconst, Qvar] = self.buildQ(d)
-
-    #     for Q in Qconst:
-    #         print("Qconst contains the derivative {}, which has multiplicity {}".format(Q,Qconst[Q]))
-    #     for Q in Qvar:
-    #         print("Qvar contains the derivative {}, which has multiplicity {}".format(Q,Qvar[Q]))
+    
 
 class PowerExpr(BinaryExpr):
     def __init__(self, L, R):
@@ -293,16 +204,4 @@ class PowerExpr(BinaryExpr):
     def __str__(self):
         return 'pow({},{})'.format(self.left(), self.right())
 
-    # def buildQForOrder(self,d):
-    #     F = self.buildFForOrder(d)
-
-    #     Qconst = {}; Qvar = F 
-    #     return Qconst, Qvar 
-
-    # def printQ(self,d):
-    #     [Qconst, Qvar] = self.buildQ(d)
-
-    #     for Q in Qconst:
-    #         print("Qconst contains the derivative {}, which has multiplicity {}".format(Q,Qconst[Q]))
-    #     for Q in Qvar:
-    #         print("Qvar contains the derivative {}, which has multiplicity {}".format(Q,Qvar[Q]))
+    

@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from . ExprShape import (ExprShape, ScalarShape, TensorShape,
     VectorShape, AggShape)
 from numbers import Number
-from numpy import dot, array_equiv, inf, ndarray
+from numpy import ndarray
 import copy
 import logging
 
@@ -479,17 +479,20 @@ class Expr(ABC):
     # Create evaluator
     # ======================================================================
 
-    @abstractmethod
+    # TODO: This really should be an abstract method. 
+    # I've left it with a silly implementation
+    # while we put real implementations into the various expr subtypes
+    #@abstractmethod
     def _makeEval(self, context):
         '''Constructs evaluator object for a given context'''
         pass
     
     def makeEval(self, context):
-        if context in _contextToEvaluatorMap:
-            return _contextToEvaluatorMap
+        if context in self._contextToEvaluatorMap:
+            return self._contextToEvaluatorMap[context]
         else:
             eval = self._makeEval(context)
-            _contextToEvaluatorMap[context] = eval
+            self._contextToEvaluatorMap[context] = eval
             return eval
         
     

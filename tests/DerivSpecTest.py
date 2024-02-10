@@ -1,10 +1,12 @@
 from SymPDE.DerivSpecifier import DerivSpecifier, MultipleDeriv
 from SymPDE.Coordinate import Coordinate
-from SymPDE.DiffOp import _Partial, _Gradient
+from SymPDE.HungryDiffOp import _Partial, _Gradient
 from SymPDE.FunctionWithBasis import TestFunction, UnknownFunction
 from SymPDE.Lagrange import Lagrange
 
 if __name__=='__main__':
+    
+    
     bas = Lagrange(1)
     v = TestFunction(bas, 'v')
     u = UnknownFunction(bas, 'u')

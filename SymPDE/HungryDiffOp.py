@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from functools import total_ordering
-from . ExprShape import (ExprShape, ScalarShape, TensorShape, VectorShape)
-import pytest
+from . ExprShape import (ScalarShape, TensorShape, VectorShape)
 
 @total_ordering
 class HungryDiffOp(ABC):

@@ -38,17 +38,31 @@ class Coordinate(Expr):
 
     def name(self):
         return self._name
+    
+    def _makeEval(self, context):
+        return CoordinateEvaluator(self, context)
 
-    def buildAForOrder(self,d):
-        Avar = {}
-        if d == 1:
-            Aconst = {self._dir : 1}
-        else:
-            Aconst = {}
+    # def buildAForOrder(self,d):
+    #     Avar = {}
+    #     if d == 1:
+    #         Aconst = {self._dir : 1}
+    #     else:
+    #         Aconst = {}
 
-        return Aconst, Avar
+    #     return Aconst, Avar
 
 
+
+from . ExprEval import ExprEvaluator
+
+class CoordinateEvaluator(ExprEvaluator):
+    
+    def __init__(self, expr, context):
+        super().__init__(expr,context)
+
+    def __str__(self):
+        return 'CoordEvaluator({})'.format(self.myExpr().name())
+    
 
     # def buildAForOrder(self,d):
     #     if d == 1:
@@ -62,12 +76,12 @@ class Coordinate(Expr):
 
     #     return A 
 
-    def buildAllAUpToOrder(self,d):
-        Asets = []
-        for i in range(d):
-            Asets.append(self.buildAForOrder(i+1))
+    # def buildAllAUpToOrder(self,d):
+    #     Asets = []
+    #     for i in range(d):
+    #         Asets.append(self.buildAForOrder(i+1))
 
-        return Asets 
+    #     return Asets 
 
     # def buildA(self,d):
     #     Avar = {}

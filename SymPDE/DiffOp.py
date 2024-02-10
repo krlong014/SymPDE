@@ -1,7 +1,4 @@
-from abc import ABC, abstractmethod
-from functools import total_ordering
 from . ExprWithChildren import UnaryExpr
-import pytest
 
 class DiffOp(UnaryExpr):
 
@@ -28,13 +25,18 @@ class DiffOp(UnaryExpr):
 
 
 class DiffOpOnFunction(DiffOp):
+    '''
+    This class is a specialization of diff op to the case where the argument is a 
+    function.
+    '''
 
     def __init__(self, op, arg):
-        
-        from . FunctionWithBasis import FunctionWithBasis
-        
-        assert(isinstance(arg, FunctionWithBasis))
-        super().__init__(op, arg)
+      '''Constructor. All that's done is to check type and then 
+        construct the superclass'''    
+      from . FunctionWithBasis import FunctionWithBasis
+
+      assert(isinstance(arg, FunctionWithBasis))
+      super().__init__(op, arg)
 
     def funcID(self):
         return self.arg().funcID()
@@ -50,7 +52,7 @@ class DiffOpOnFunction(DiffOp):
 
 
     def isIndependentOf(self, u):
-        if arg==u:
+        if self.arg()==u:
             return False
         return True
 

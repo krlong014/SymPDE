@@ -3,7 +3,8 @@ from . Expr import Expr
 from . ArithmeticExpr import (Dot, Cross, UnaryMinus, SumExpr, ProductExpr,
     CrossProductExpr, QuotientExpr, PowerExpr)
 from SymPDE.Coordinate import Coordinate
-from . DiffOp import (DiffOp, HungryDiffOp, Partial, _Partial, _IdentityOp,
+from . DiffOp import DiffOp
+from . HungryDiffOp import (HungryDiffOp, Partial, _Partial, _IdentityOp,
     _Div, Div, _Gradient, Gradient, _Curl, Curl, _Rot, Rot)
 from SymPDE.VectorExpr import Vector
 from SymPDE.AggExpr import AggExpr
@@ -179,7 +180,7 @@ def differentiateQuotient(expr, op):
     # - div(v/s)
     # - curl(v/s) and rot(v/s)
 
-    raise SpatialFADException('product rule case not handled', op, (left,right))
+    raise SpatialFADException('quotient rule case not handled', op, (num,den))
 
 
 
@@ -213,7 +214,7 @@ def differentiatePower(expr, op):
 
 
 def differentiateVector(expr, op):
-    assert(isinstance(expr, VectorExprBase))
+    assert(expr.isVector())
     assert(isinstance(op, (_Partial, _Div, _Curl, _Rot)))
 
     raise NotImplementedError('differentiateVector')

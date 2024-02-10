@@ -1,5 +1,5 @@
 from .. BasisBase import ScalarBasisBase
-from .. DiffOp import _Partial, _IdentityOp
+from .. HungryDiffOp import _Partial, _IdentityOp
 import numpy as np
 
 class FourierSineBasis(ScalarBasisBase):
