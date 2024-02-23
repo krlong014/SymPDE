@@ -1,12 +1,13 @@
-from SymPDE.Coordinate import Coordinate, CoordinateEvaluator
-from SymPDE.ArithmeticExpr import UnaryMinus
-from SymPDE.ChainRuleEval import UnaryMinusEvaluator
+from SymPDE.Coordinate import Coordinate
 
-f = Coordinate(0)
-g = -f
+x = Coordinate(0)
+y = Coordinate(1)
+f = x
+g = -y
+h = f + g
 
 context = 'bob'
 
-eval = g.makeEval(context)
+eval = h.makeEval(context)
 
-print('\n\nEvaluator for {} is {}\n\n'.format(f, eval))
+print('\n\nEvaluator for {} is {}\n\n'.format(h, eval))

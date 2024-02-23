@@ -15,10 +15,10 @@ from collections.abc import Iterable
 class UnaryMinus(UnaryExpr):
     def __init__(self, arg):
         super().__init__(arg, Expr._getShape(arg))
-        self.arg = arg 
-
+        
     def __str__(self):
-        return '-%s' % Expr._maybeParenthesize(self.arg())
+        myArg = self.arg()
+        return '-%s' % Expr._maybeParenthesize(myArg)
 
     def __repr__(self):
         return 'UnaryMinus[arg={}]'.format(self.arg().__repr__())
@@ -106,6 +106,10 @@ class SumExpr(BinaryArithmeticOp):
             print("Qconst contains the derivative {}, which has multiplicity {}".format(Q,Qconst[Q]))
         for Q in Qvar:
             print("Qvar contains the derivative {}, which has multiplicity {}".format(Q,Qvar[Q]))
+    
+    def _makeEval(self, context):
+        from SymPDE.ChainRuleEval import SumEvaluator
+        return SumEvaluator(self, context)
 
 
 
