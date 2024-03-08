@@ -1,24 +1,23 @@
 from collections.abc import Iterable
 from SymPDE.ExprShape import ExprShape
 from SymPDE.Coordinate import Coordinate
-from SymPDE.ArithmeticExpr import SumExpr, ProductExpr, PowerExpr, QuotientExpr
-import SymPDE.FunctionWithBasis as fwb
-from SymPDE.BasisBase import BasisBase, ScalarBasisBase
-from MakeEval import makeEval 
-# from SymPDE.ExprEval import ExprWithChildrenEval
+from SymPDE.ArithmeticExpr import UnaryMinus, SumExpr, ProductExpr, PowerExpr, QuotientExpr
+from SymPDE.DictFuncs import interdict, listInterdict
 
 x = Coordinate(0)
 y = Coordinate(1)
 
-g = -x
-g_eval = makeEval(g)
-# Qconst, Qvar = g.buildQForOrder(1)
-# print("Qconst = {}, Qvar = {}".format(Qconst,Qvar))
+g = 2*x 
+context = 'no context'
+Petitions = ['x', ('x','y')]
 
-#we need a serparate entity that builds an 
-	#evaluator based on the expression.
+g_eval = g._makeEval(context)
 
-	#something like 
-	#g_eval = makeEval(g)
+[Qconst, Qvar] = g_eval.buildQForOrder(1)
+print("Qconst = {}, Qvar = {}".format(Qconst, Qvar))
 
-	#then we can just write g_eval.buildQ
+[Aconst, Avar] = g_eval.buildAForOrder(1)
+print("Aconst = {}, Avar = {}".format(Aconst, Avar))
+
+# [Rconst, Rvar] = g_eval.buildR(Petitions)
+# print("Rconst = {}, Rvar = {}".format(Rconst, Rvar))

@@ -14,6 +14,7 @@ from . IndexableExpr import (
 from numpy.linalg import norm
 from numpy import inf, dot, array_equiv
 from abc import ABC, abstractmethod
+from . ExprEval import ExprEvaluator
 
 class ConstantExprBase(Expr, ABC):
     def __init__(self, data, shape):
@@ -59,7 +60,6 @@ class ConstantExprBase(Expr, ABC):
         return norm(self._data, ord=inf)==0.0
 
 
-
 class ConstantScalarExpr(ConstantExprBase):
     def __init__(self, data):
         super().__init__(data, ScalarShape())
@@ -83,6 +83,25 @@ class ConstantScalarExpr(ConstantExprBase):
 
     def _isZero(self):
         return self.data()==0.0
+
+    def _makeEval(self, context):
+        return ConstantScalarEvaluator(self,context)
+
+class ConstantScalarEvaluator(ExprEvaluator):
+    def __init__(self,data,context):
+        super().__init__(data,context)
+
+    def __str__(self):
+        return 'ConstantScalarEvaluator({})'.format(self.myExpr().name())
+
+    def buildAForOrder(self,d):
+        Avar = {}
+        if d == 0:
+            Aconst = {'Identity':1}
+        else:
+            Aconst = {}
+            
+        return Aconst, Avar
 
 
 

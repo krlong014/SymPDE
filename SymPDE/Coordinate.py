@@ -64,28 +64,12 @@ class CoordinateEvaluator(ExprEvaluator):
         return 'CoordEvaluator({})'.format(self.myExpr().name())
     
 
-    # def buildAForOrder(self,d):
-    #     if d == 1:
-    #         A = [self._dir] 
-    #     else:
-    #         A = []
+    def buildAForOrder(self,d):
+        Aconst = {}; Avar = {}
 
-    #     if len(A) != 0:
-    #         mults = [[int(binom(d,i)) for i in range(len(A))]]
-    #         A = [A + mults]
+        if d == 1:
+            Aconst[self.myExpr().name()] = 1
 
-    #     return A 
-
-    # def buildAllAUpToOrder(self,d):
-    #     Asets = []
-    #     for i in range(d):
-    #         Asets.append(self.buildAForOrder(i+1))
-
-    #     return Asets 
-
-    # def buildA(self,d):
-    #     Avar = {}
-    #     Aconst = {self._dir : 1}
-    #     return Aconst, Avar
+        return Aconst, Avar 
 
 

@@ -133,6 +133,10 @@ class ProductExpr(BinaryArithmeticOp):
             return True
         return False
 
+    def _makeEval(self,context):
+        from SymPDE.ChainRuleEval import ProductEvaluator
+        return ProductEvaluator(self,context)
+
     
 def Dot(a, b):
     assert(isinstance(a.shape(), VectorShape)
@@ -198,6 +202,9 @@ class QuotientExpr(BinaryArithmeticOp):
             return True
         return False
     
+    def _makeEval(self,context):
+        from SymPDE.ChainRuleEval import QuotientEvaluator
+        return QuotientEvaluator(self,context)
 
 class PowerExpr(BinaryExpr):
     def __init__(self, L, R):
@@ -209,3 +216,6 @@ class PowerExpr(BinaryExpr):
         return 'pow({},{})'.format(self.left(), self.right())
 
     
+    def _makeEval(self,context):
+        from SymPDE.ChainRuleEval import PowerEvaluator
+        return PowerEvaluator(self,context)
